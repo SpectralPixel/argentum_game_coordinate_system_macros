@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 
-#[proc_macro_derive(CoordNegate)]
+#[proc_macro_derive(CoordinateArithmetic, attributes(signed, unsigned))]
 pub fn coord_negate_derive(input: TokenStream) -> TokenStream {
     let ast: syn::DeriveInput = syn::parse(input).unwrap();
 
