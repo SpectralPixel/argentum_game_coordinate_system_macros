@@ -7,14 +7,23 @@ pub fn coord_negate_derive(input: TokenStream) -> TokenStream {
     let (name, impl_generics, type_generics, where_clause, _generic) =
         split_for_impl_coordinate_type(&ast);
 
-    let gen = quote::quote! {
-        impl #impl_generics std::ops::Neg for #name #type_generics #where_clause {
-            type Output = #name #type_generics;
+    let mut signed_extras = proc_macro2::TokenStream::new();
+    if let Some(attr) = ast.attrs.get(0) {
+        if attr.path().is_ident("signed") {
+            signed_extras = quote::quote! {
+                impl #impl_generics std::ops::Neg for #name #type_generics #where_clause {
+                    type Output = #name #type_generics;
 
-            fn neg(self) -> Self::Output {
-                Self::new(-self.x, -self.y, -self.z)
-            }
+                    fn neg(self) -> Self::Output {
+                        Self::new(-self.x, -self.y, -self.z)
+                    }
+                }
+            };
         }
+    }
+
+    let gen = quote::quote! {
+        #signed_extras
     };
 
     gen.into()
