@@ -4,11 +4,12 @@ use proc_macro::TokenStream;
 pub fn coord_negate_derive(input: TokenStream) -> TokenStream {
     let ast: syn::DeriveInput = syn::parse(input).unwrap();
 
-    let name = &ast.ident;
+    let (name, impl_generics, type_generics, where_clause, _generic) =
+        split_for_impl_coordinate_type(&ast);
 
     let gen = quote::quote! {
-        impl Neg for #name {
-            type Output = Self;
+        impl #impl_generics std::ops::Neg for #name #type_generics #where_clause {
+            type Output = #name #type_generics;
 
             fn neg(self) -> Self::Output {
                 Self::new(-self.x, -self.y, -self.z)
