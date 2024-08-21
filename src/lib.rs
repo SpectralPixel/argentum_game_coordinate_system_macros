@@ -1,7 +1,5 @@
-use proc_macro::TokenStream;
-
 #[proc_macro_derive(CoordinateArithmetic, attributes(signed))]
-pub fn coord_negate_derive(input: TokenStream) -> TokenStream {
+pub fn coord_negate_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast: syn::DeriveInput = syn::parse(input).unwrap();
 
     let (name, impl_generics, type_generics, where_clause, _generic) =
@@ -30,7 +28,7 @@ pub fn coord_negate_derive(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_derive(Coordinate)]
-pub fn coordinate_trait_derive(input: TokenStream) -> TokenStream {
+pub fn coordinate_trait_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast: syn::DeriveInput = syn::parse(input).unwrap();
 
     let (name, impl_generics, type_generics, where_clause, generic) =
