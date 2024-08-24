@@ -47,6 +47,13 @@ pub fn coordinate_trait_derive(input: proc_macro::TokenStream) -> proc_macro::To
                 Self::new(n, n, n)
             }
         }
+
+        use core::fmt::{Display, Formatter, Result};
+        impl #impl_generics Display for #name #type_generics #where_clause {
+            fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+                write!(f, "({}: {}, {}, {})", stringify!(#name #type_generics), self.x, self.y, self.z)
+            }
+        }
     };
 
     gen.into()
