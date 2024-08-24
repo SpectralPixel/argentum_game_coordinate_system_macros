@@ -111,6 +111,17 @@ pub fn coordinate_trait_derive(input: proc_macro::TokenStream) -> proc_macro::To
             type Type = #name #type_generics;
             type FieldType = #generic;
 
+            const MAX: Self::Type = Self::Type {
+                x: #generic::MAX,
+                y: #generic::MAX,
+                z: #generic::MAX,
+            };
+            const MIN: Self::Type = Self::Type {
+                x: #generic::MIN,
+                y: #generic::MIN,
+                z: #generic::MIN,
+            };
+
             fn new(x: Self::FieldType, y: Self::FieldType, z: Self::FieldType) -> Self::Type {
                 Self::Type { x, y, z }
             }
