@@ -2,93 +2,36 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{DeriveInput, GenericParam, Ident, ImplGenerics, TypeGenerics, WhereClause};
 
-fn add(
-    name: &Ident,
-    impl_generics: &ImplGenerics,
-    type_generics: &TypeGenerics,
-    where_clause: &Option<&WhereClause>,
-    generic: &GenericParam,
-) -> TokenStream {
-    quote! {
-        impl #impl_generics std::ops::Add for #name #type_generics #where_clause {
-            type Output = #name #type_generics;
-
-            fn add(self, rhs: #name #type_generics) -> Self::Output {
-                let panic_if_out_of_bounds = || panic!("{} is experiencing integer overflow after adding by {}.", self, rhs);
-                let x = #generic::checked_add(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
-                let y = #generic::checked_add(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds);
-                let z = #generic::checked_add(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds);
-                Self::new(x, y, z)
+macro_rules! arithmetic_operation {
+    ($trait_name:ident, $func_name:ident, $operation:ident, $operation_failure_message:literal) => {
+        fn $func_name (
+            name: &Ident,
+            impl_generics: &ImplGenerics,
+            type_generics: &TypeGenerics,
+            where_clause: &Option<&WhereClause>,
+            generic: &GenericParam,
+        ) -> TokenStream {
+            quote! {
+                impl #impl_generics std::ops::$trait_name for #name #type_generics #where_clause {
+                    type Output = Self;
+        
+                    fn $func_name(self, rhs: #name #type_generics) -> Self::Output {
+                        let panic_if_out_of_bounds = || panic!($operation_failure_message, self, rhs);
+                        let x = #generic::$operation(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
+                        let y = #generic::$operation(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds);
+                        let z = #generic::$operation(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds);
+                        Self::new(x, y, z)
+                    }
+                }
             }
         }
-    }
+    };
 }
 
-fn sub(
-    name: &Ident,
-    impl_generics: &ImplGenerics,
-    type_generics: &TypeGenerics,
-    where_clause: &Option<&WhereClause>,
-    generic: &GenericParam,
-) -> TokenStream {
-    quote! {
-        impl #impl_generics std::ops::Sub for #name #type_generics #where_clause {
-            type Output = #name #type_generics;
-
-            fn sub(self, rhs: #name #type_generics) -> Self::Output {
-                let panic_if_out_of_bounds = || panic!("{} is experiencing integer overflow after adding by {}.", self, rhs);
-                let x = #generic::checked_sub(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
-                let y = #generic::checked_sub(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds);
-                let z = #generic::checked_sub(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds);
-                Self::new(x, y, z)
-            }
-        }
-    }
-}
-
-fn mul(
-    name: &Ident,
-    impl_generics: &ImplGenerics,
-    type_generics: &TypeGenerics,
-    where_clause: &Option<&WhereClause>,
-    generic: &GenericParam,
-) -> TokenStream {
-    quote! {
-        impl #impl_generics std::ops::Mul for #name #type_generics #where_clause {
-            type Output = #name #type_generics;
-
-            fn mul(self, rhs: #name #type_generics) -> Self::Output {
-                let panic_if_out_of_bounds = || panic!("{} is experiencing integer overflow after multiplying by {}.", self, rhs);
-                let x = #generic::checked_mul(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
-                let y = #generic::checked_mul(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds);
-                let z = #generic::checked_mul(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds);
-                Self::new(x, y, z)
-            }
-        }
-    }
-}
-
-fn div(
-    name: &Ident,
-    impl_generics: &ImplGenerics,
-    type_generics: &TypeGenerics,
-    where_clause: &Option<&WhereClause>,
-    generic: &GenericParam,
-) -> TokenStream {
-    quote! {
-        impl #impl_generics std::ops::Div for #name #type_generics #where_clause {
-            type Output = #name #type_generics;
-
-            fn div(self, rhs: #name #type_generics) -> Self::Output {
-                let panic_if_out_of_bounds = || panic!("{} encountered a problem while being divided by {}.", self, rhs);
-                let x = #generic::checked_div(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
-                let y = #generic::checked_div(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds);
-                let z = #generic::checked_div(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds);
-                Self::new(x, y, z)
-            }
-        }
-    }
-}
+arithmetic_operation!(Add, add, checked_add, "{} is experiencing integer overflow after adding by {}.");
+arithmetic_operation!(Sub, sub, checked_sub, "{} is experiencing integer overflow after subtracting by {}.");
+arithmetic_operation!(Mul, mul, checked_mul, "{} is experiencing integer overflow after multiplying by {}.");
+arithmetic_operation!(Div, div, checked_div, "{} encountered a problem while being divided by {}.");
 
 fn bitand(
     name: &Ident,
