@@ -26,19 +26,14 @@ fn neg(
     }
 }
 
-pub fn generate(
-    ast: &DeriveInput,
+fn add(
     name: &Ident,
     impl_generics: &ImplGenerics,
     type_generics: &TypeGenerics,
     where_clause: &Option<&WhereClause>,
     generic: &GenericParam,
 ) -> TokenStream {
-    let neg = neg(&ast, &name, &impl_generics, &type_generics, &where_clause);
-
     quote! {
-        #neg
-
         impl #impl_generics std::ops::Add for #name #type_generics #where_clause {
             type Output = #name #type_generics;
 
@@ -50,6 +45,31 @@ pub fn generate(
                 Self::new(x, y, z)
             }
         }
+    }
+}
+
+pub fn generate(
+    ast: &DeriveInput,
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+    generic: &GenericParam,
+) -> TokenStream {
+    let neg = neg(&ast, &name, &impl_generics, &type_generics, &where_clause);
+
+    let add = add(
+        &name,
+        &impl_generics,
+        &type_generics,
+        &where_clause,
+        &generic,
+    );
+
+    quote! {
+        #neg
+
+        #add
 
         impl #impl_generics std::ops::AddAssign for #name #type_generics #where_clause {
             fn add_assign(&mut self, rhs: #name #type_generics) {
