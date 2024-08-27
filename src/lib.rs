@@ -113,6 +113,14 @@ pub fn coord_negate_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
             }
         }
 
+        impl #impl_generics std::ops::Not for #name #type_generics #where_clause {
+            type Output = #name #type_generics;
+
+            fn not(self) -> Self::Output {
+                Self::new(!self.x, !self.y, !self.z)
+            }
+        }
+
         impl #impl_generics std::ops::BitAnd for #name #type_generics #where_clause {
             type Output = Self;
 
