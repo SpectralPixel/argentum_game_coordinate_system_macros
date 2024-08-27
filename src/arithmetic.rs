@@ -100,6 +100,43 @@ fn sub_assign(
     }
 }
 
+fn mul(
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+    generic: &GenericParam,
+) -> TokenStream {
+    quote! {
+        impl #impl_generics std::ops::Mul for #name #type_generics #where_clause {
+            type Output = #name #type_generics;
+
+            fn mul(self, rhs: #name #type_generics) -> Self::Output {
+                let panic_if_out_of_bounds = || panic!("{} is experiencing integer overflow after multiplying by {}.", self, rhs);
+                let x = #generic::checked_mul(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
+                let y = #generic::checked_mul(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds);
+                let z = #generic::checked_mul(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds);
+                Self::new(x, y, z)
+            }
+        }
+    }
+}
+
+fn mul_assign(
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> TokenStream {
+    quote! {
+        impl #impl_generics std::ops::MulAssign for #name #type_generics #where_clause {
+            fn mul_assign(&mut self, rhs: #name #type_generics) {
+                *self = self.to_owned() * rhs;
+            }
+        }
+    }
+}
+
 pub fn generate(
     ast: &DeriveInput,
     name: &Ident,
@@ -130,6 +167,16 @@ pub fn generate(
 
     let sub_assign = sub_assign(&name, &impl_generics, &type_generics, &where_clause);
 
+    let mul = mul(
+        &name,
+        &impl_generics,
+        &type_generics,
+        &where_clause,
+        &generic,
+    );
+
+    let mul_assign = mul_assign(&name, &impl_generics, &type_generics, &where_clause);
+
     quote! {
         #neg
 
@@ -139,23 +186,8 @@ pub fn generate(
         #sub
         #sub_assign
 
-        impl #impl_generics std::ops::Mul for #name #type_generics #where_clause {
-            type Output = #name #type_generics;
-
-            fn mul(self, rhs: #name #type_generics) -> Self::Output {
-                let panic_if_out_of_bounds = || panic!("{} is experiencing integer overflow after multiplying by {}.", self, rhs);
-                let x = #generic::checked_mul(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
-                let y = #generic::checked_mul(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds);
-                let z = #generic::checked_mul(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds);
-                Self::new(x, y, z)
-            }
-        }
-
-        impl #impl_generics std::ops::MulAssign for #name #type_generics #where_clause {
-            fn mul_assign(&mut self, rhs: #name #type_generics) {
-                *self = self.to_owned() * rhs;
-            }
-        }
+        #mul
+        #mul_assign
 
         impl #impl_generics std::ops::Div for #name #type_generics #where_clause {
             type Output = #name #type_generics;
