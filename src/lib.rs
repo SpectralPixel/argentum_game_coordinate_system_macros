@@ -95,6 +95,24 @@ pub fn coord_negate_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
             }
         }
 
+        impl #impl_generics std::ops::Rem<#generic> for #name #type_generics #where_clause {
+            type Output = #name #type_generics;
+
+            fn rem(self, rhs: #generic) -> Self::Output {
+                Self::new(
+                    self.x % rhs,
+                    self.y % rhs,
+                    self.z % rhs,
+                )
+            }
+        }
+
+        impl #impl_generics std::ops::RemAssign<#generic> for #name #type_generics #where_clause {
+            fn rem_assign(&mut self, rhs: #generic) {
+                *self = self.to_owned() % rhs;
+            }
+        }
+
         impl #impl_generics std::ops::BitAnd for #name #type_generics #where_clause {
             type Output = Self;
 
