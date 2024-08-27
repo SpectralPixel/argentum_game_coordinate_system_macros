@@ -1,9 +1,52 @@
-#[proc_macro_derive(CoordinateArithmetic, attributes(signed))]
-pub fn coord_negate_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+#[proc_macro_derive(Coordinate, attributes(signed))]
+pub fn coordinate_trait_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast: syn::DeriveInput = syn::parse(input).unwrap();
 
     let (name, impl_generics, type_generics, where_clause, generic) =
         split_for_impl_coordinate_type(&ast);
+
+    let coord_trait = quote::quote! {
+        impl #impl_generics CoordinateTrait for #name #type_generics #where_clause {
+            type Type = #name #type_generics;
+            type FieldType = #generic;
+
+            const MAX: Self::Type = Self::Type {
+                x: #generic::MAX,
+                y: #generic::MAX,
+                z: #generic::MAX,
+            };
+            const MIN: Self::Type = Self::Type {
+                x: #generic::MIN,
+                y: #generic::MIN,
+                z: #generic::MIN,
+            };
+
+            fn new(x: Self::FieldType, y: Self::FieldType, z: Self::FieldType) -> Self::Type {
+                Self::Type { x, y, z }
+            }
+
+            fn splat(n: Self::FieldType) -> Self::Type {
+                Self::new(n, n, n)
+            }
+        }
+
+        use core::fmt::{Display, Formatter, Result};
+        impl #impl_generics Display for #name #type_generics #where_clause {
+            fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+                write!(f, "({}: {}, {}, {})", stringify!(#name), self.x, self.y, self.z)
+            }
+        }
+
+        impl #impl_generics quickcheck::Arbitrary for #name #type_generics #where_clause {
+            fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+                Self::new(
+                    #generic::arbitrary(g),
+                    #generic::arbitrary(g),
+                    #generic::arbitrary(g),
+                )
+            }
+        }
+    };
 
     let mut signed_extras = proc_macro2::TokenStream::new();
     if let Some(attr) = ast.attrs.get(0) {
@@ -20,7 +63,7 @@ pub fn coord_negate_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
         }
     }
 
-    let gen = quote::quote! {
+    let arithmetic = quote::quote! {
         #signed_extras
 
         impl #impl_generics std::ops::Add for #name #type_generics #where_clause {
@@ -164,57 +207,9 @@ pub fn coord_negate_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
         }
     };
 
-    gen.into()
-}
-
-#[proc_macro_derive(Coordinate)]
-pub fn coordinate_trait_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let ast: syn::DeriveInput = syn::parse(input).unwrap();
-
-    let (name, impl_generics, type_generics, where_clause, generic) =
-        split_for_impl_coordinate_type(&ast);
-
     let gen = quote::quote! {
-        impl #impl_generics CoordinateTrait for #name #type_generics #where_clause {
-            type Type = #name #type_generics;
-            type FieldType = #generic;
-
-            const MAX: Self::Type = Self::Type {
-                x: #generic::MAX,
-                y: #generic::MAX,
-                z: #generic::MAX,
-            };
-            const MIN: Self::Type = Self::Type {
-                x: #generic::MIN,
-                y: #generic::MIN,
-                z: #generic::MIN,
-            };
-
-            fn new(x: Self::FieldType, y: Self::FieldType, z: Self::FieldType) -> Self::Type {
-                Self::Type { x, y, z }
-            }
-
-            fn splat(n: Self::FieldType) -> Self::Type {
-                Self::new(n, n, n)
-            }
-        }
-
-        use core::fmt::{Display, Formatter, Result};
-        impl #impl_generics Display for #name #type_generics #where_clause {
-            fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-                write!(f, "({}: {}, {}, {})", stringify!(#name), self.x, self.y, self.z)
-            }
-        }
-
-        impl #impl_generics quickcheck::Arbitrary for #name #type_generics #where_clause {
-            fn arbitrary(g: &mut quickcheck::Gen) -> Self {
-                Self::new(
-                    #generic::arbitrary(g),
-                    #generic::arbitrary(g),
-                    #generic::arbitrary(g),
-                )
-            }
-        }
+        #coord_trait
+        #arithmetic
     };
 
     gen.into()
