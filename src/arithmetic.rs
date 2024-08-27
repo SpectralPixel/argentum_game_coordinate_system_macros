@@ -137,6 +137,43 @@ fn mul_assign(
     }
 }
 
+fn div(
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+    generic: &GenericParam,
+) -> TokenStream {
+    quote! {
+        impl #impl_generics std::ops::Div for #name #type_generics #where_clause {
+            type Output = #name #type_generics;
+
+            fn div(self, rhs: #name #type_generics) -> Self::Output {
+                let panic_if_out_of_bounds = || panic!("{} encountered a problem while being divided by {}.", self, rhs);
+                let x = #generic::checked_div(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
+                let y = #generic::checked_div(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds);
+                let z = #generic::checked_div(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds);
+                Self::new(x, y, z)
+            }
+        }
+    }
+}
+
+fn div_assign(
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> TokenStream {
+    quote! {
+        impl #impl_generics std::ops::DivAssign for #name #type_generics #where_clause {
+            fn div_assign(&mut self, rhs: #name #type_generics) {
+                *self = self.to_owned() / rhs;
+            }
+        }
+    }
+}
+
 pub fn generate(
     ast: &DeriveInput,
     name: &Ident,
@@ -177,6 +214,16 @@ pub fn generate(
 
     let mul_assign = mul_assign(&name, &impl_generics, &type_generics, &where_clause);
 
+    let div = div(
+        &name,
+        &impl_generics,
+        &type_generics,
+        &where_clause,
+        &generic,
+    );
+
+    let div_assign = div_assign(&name, &impl_generics, &type_generics, &where_clause);
+
     quote! {
         #neg
 
@@ -189,23 +236,8 @@ pub fn generate(
         #mul
         #mul_assign
 
-        impl #impl_generics std::ops::Div for #name #type_generics #where_clause {
-            type Output = #name #type_generics;
-
-            fn div(self, rhs: #name #type_generics) -> Self::Output {
-                let panic_if_out_of_bounds = || panic!("{} encountered a problem while being divided by {}.", self, rhs);
-                let x = #generic::checked_div(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
-                let y = #generic::checked_div(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds);
-                let z = #generic::checked_div(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds);
-                Self::new(x, y, z)
-            }
-        }
-
-        impl #impl_generics std::ops::DivAssign for #name #type_generics #where_clause {
-            fn div_assign(&mut self, rhs: #name #type_generics) {
-                *self = self.to_owned() / rhs;
-            }
-        }
+        #div
+        #div_assign
 
         impl #impl_generics std::ops::Rem<#generic> for #name #type_generics #where_clause {
             type Output = #name #type_generics;
