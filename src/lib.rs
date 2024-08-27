@@ -137,6 +137,16 @@ pub fn coordinate_trait_derive(input: proc_macro::TokenStream) -> proc_macro::To
                 write!(f, "({}: {}, {}, {})", stringify!(#name #type_generics), self.x, self.y, self.z)
             }
         }
+
+        impl #impl_generics quickcheck::Arbitrary for #name #type_generics #where_clause {
+            fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+                Self::new(
+                    #generic::arbitrary(g),
+                    #generic::arbitrary(g),
+                    #generic::arbitrary(g),
+                )
+            }
+        }
     };
 
     gen.into()
