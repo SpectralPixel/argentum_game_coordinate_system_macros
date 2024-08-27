@@ -2,7 +2,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{DeriveInput, GenericParam, Ident, ImplGenerics, TypeGenerics, WhereClause};
 
-fn signed_extras(
+fn neg(
     ast: &DeriveInput,
     name: &Ident,
     impl_generics: &ImplGenerics,
@@ -34,10 +34,10 @@ pub fn generate(
     where_clause: &Option<&WhereClause>,
     generic: &GenericParam,
 ) -> TokenStream {
-    let signed_extras = signed_extras(&ast, &name, &impl_generics, &type_generics, &where_clause);
+    let neg = neg(&ast, &name, &impl_generics, &type_generics, &where_clause);
 
     quote! {
-        #signed_extras
+        #neg
 
         impl #impl_generics std::ops::Add for #name #type_generics #where_clause {
             type Output = #name #type_generics;
