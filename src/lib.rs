@@ -94,6 +94,48 @@ pub fn coord_negate_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
                 *self = self.to_owned() / rhs;
             }
         }
+
+        impl #impl_generics std::ops::BitAnd for #name #type_generics #where_clause {
+            type Output = Self;
+
+            fn bitand(self, rhs: Self) -> Self::Output {
+                Self::new(self.x & rhs.x, self.y & rhs.y, self.z & rhs.z)
+            }
+        }
+
+        impl #impl_generics std::ops::BitAndAssign for #name #type_generics #where_clause {
+            fn bitand_assign(&mut self, rhs: Self) {
+                *self = self.to_owned() & rhs;
+            }
+        }
+
+        impl #impl_generics std::ops::BitOr for #name #type_generics #where_clause {
+            type Output = Self;
+
+            fn bitor(self, rhs: Self) -> Self::Output {
+                Self::new(self.x | rhs.x, self.y | rhs.y, self.z | rhs.z)
+            }
+        }
+
+        impl #impl_generics std::ops::BitOrAssign for #name #type_generics #where_clause {
+            fn bitor_assign(&mut self, rhs: Self) {
+                *self = self.to_owned() | rhs;
+            }
+        }
+
+        impl #impl_generics std::ops::BitXor for #name #type_generics #where_clause {
+            type Output = Self;
+
+            fn bitxor(self, rhs: Self) -> Self::Output {
+                Self::new(self.x ^ rhs.x, self.y ^ rhs.y, self.z ^ rhs.z)
+            }
+        }
+
+        impl #impl_generics std::ops::BitXorAssign for #name #type_generics #where_clause {
+            fn bitxor_assign(&mut self, rhs: Self) {
+                *self = self.to_owned() ^ rhs;
+            }
+        }
     };
 
     gen.into()
