@@ -63,6 +63,43 @@ fn add_assign(
     }
 }
 
+fn sub(
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+    generic: &GenericParam,
+) -> TokenStream {
+    quote! {
+        impl #impl_generics std::ops::Sub for #name #type_generics #where_clause {
+            type Output = #name #type_generics;
+
+            fn sub(self, rhs: #name #type_generics) -> Self::Output {
+                let panic_if_out_of_bounds = || panic!("{} is experiencing integer overflow after adding by {}.", self, rhs);
+                let x = #generic::checked_sub(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
+                let y = #generic::checked_sub(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds);
+                let z = #generic::checked_sub(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds);
+                Self::new(x, y, z)
+            }
+        }
+    }
+}
+
+fn sub_assign(
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> TokenStream {
+    quote! {
+        impl #impl_generics std::ops::SubAssign for #name #type_generics #where_clause {
+            fn sub_assign(&mut self, rhs: #name #type_generics) {
+                *self = self.to_owned() - rhs;
+            }
+        }
+    }
+}
+
 pub fn generate(
     ast: &DeriveInput,
     name: &Ident,
@@ -83,29 +120,24 @@ pub fn generate(
 
     let add_assign = add_assign(&name, &impl_generics, &type_generics, &where_clause);
 
+    let sub = sub(
+        &name,
+        &impl_generics,
+        &type_generics,
+        &where_clause,
+        &generic,
+    );
+
+    let sub_assign = sub_assign(&name, &impl_generics, &type_generics, &where_clause);
+
     quote! {
         #neg
 
         #add
         #add_assign
 
-        impl #impl_generics std::ops::Sub for #name #type_generics #where_clause {
-            type Output = #name #type_generics;
-
-            fn sub(self, rhs: #name #type_generics) -> Self::Output {
-                let panic_if_out_of_bounds = || panic!("{} is experiencing integer overflow after subtracting by {}.", self, rhs);
-                let x = #generic::checked_sub(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
-                let y = #generic::checked_sub(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds);
-                let z = #generic::checked_sub(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds);
-                Self::new(x, y, z)
-            }
-        }
-
-        impl #impl_generics std::ops::SubAssign for #name #type_generics #where_clause {
-            fn sub_assign(&mut self, rhs: #name #type_generics) {
-                *self = self.to_owned() - rhs;
-            }
-        }
+        #sub
+        #sub_assign
 
         impl #impl_generics std::ops::Mul for #name #type_generics #where_clause {
             type Output = #name #type_generics;
