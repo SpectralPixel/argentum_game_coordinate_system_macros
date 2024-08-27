@@ -48,6 +48,21 @@ fn add(
     }
 }
 
+fn add_assign(
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> TokenStream {
+    quote! {
+        impl #impl_generics std::ops::AddAssign for #name #type_generics #where_clause {
+            fn add_assign(&mut self, rhs: #name #type_generics) {
+                *self = self.to_owned() + rhs;
+            }
+        }
+    }
+}
+
 pub fn generate(
     ast: &DeriveInput,
     name: &Ident,
@@ -66,16 +81,13 @@ pub fn generate(
         &generic,
     );
 
+    let add_assign = add_assign(&name, &impl_generics, &type_generics, &where_clause);
+
     quote! {
         #neg
 
         #add
-
-        impl #impl_generics std::ops::AddAssign for #name #type_generics #where_clause {
-            fn add_assign(&mut self, rhs: #name #type_generics) {
-                *self = self.to_owned() + rhs;
-            }
-        }
+        #add_assign
 
         impl #impl_generics std::ops::Sub for #name #type_generics #where_clause {
             type Output = #name #type_generics;
