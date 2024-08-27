@@ -212,6 +212,101 @@ fn rem_assign(
     }
 }
 
+fn bitand(
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> TokenStream {
+    quote! {impl #impl_generics std::ops::BitAnd for #name #type_generics #where_clause {
+        type Output = Self;
+
+        fn bitand(self, rhs: Self) -> Self::Output {
+            Self::new(self.x & rhs.x, self.y & rhs.y, self.z & rhs.z)
+        }
+    }
+    }
+}
+
+fn bitand_assign(
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> TokenStream {
+    quote! {
+        impl #impl_generics std::ops::BitAndAssign for #name #type_generics #where_clause {
+            fn bitand_assign(&mut self, rhs: Self) {
+                *self = self.to_owned() & rhs;
+            }
+        }
+    }
+}
+
+fn bitor(
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> TokenStream {
+    quote! {
+        impl #impl_generics std::ops::BitOr for #name #type_generics #where_clause {
+            type Output = Self;
+
+            fn bitor(self, rhs: Self) -> Self::Output {
+                Self::new(self.x | rhs.x, self.y | rhs.y, self.z | rhs.z)
+            }
+        }
+    }
+}
+
+fn bitor_assign(
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> TokenStream {
+    quote! {
+        impl #impl_generics std::ops::BitOrAssign for #name #type_generics #where_clause {
+            fn bitor_assign(&mut self, rhs: Self) {
+                *self = self.to_owned() | rhs;
+            }
+        }
+    }
+}
+
+fn bitxor(
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> TokenStream {
+    quote! {
+        impl #impl_generics std::ops::BitXor for #name #type_generics #where_clause {
+            type Output = Self;
+
+            fn bitxor(self, rhs: Self) -> Self::Output {
+                Self::new(self.x ^ rhs.x, self.y ^ rhs.y, self.z ^ rhs.z)
+            }
+        }
+    }
+}
+
+fn bitxor_assign(
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> TokenStream {
+    quote! {
+        impl #impl_generics std::ops::BitXorAssign for #name #type_generics #where_clause {
+            fn bitxor_assign(&mut self, rhs: Self) {
+                *self = self.to_owned() ^ rhs;
+            }
+        }
+    }
+}
+
 fn not(
     name: &Ident,
     impl_generics: &ImplGenerics,
@@ -297,6 +392,18 @@ pub fn generate(
 
     let not = not(&name, &impl_generics, &type_generics, &where_clause);
 
+    let bitand = bitand(&name, &impl_generics, &type_generics, &where_clause);
+
+    let bitand_assign = bitand_assign(&name, &impl_generics, &type_generics, &where_clause);
+
+    let bitor = bitor(&name, &impl_generics, &type_generics, &where_clause);
+
+    let bitor_assign = bitor_assign(&name, &impl_generics, &type_generics, &where_clause);
+
+    let bitxor = bitxor(&name, &impl_generics, &type_generics, &where_clause);
+
+    let bitxor_assign = bitxor_assign(&name, &impl_generics, &type_generics, &where_clause);
+
     quote! {
         #neg
 
@@ -317,46 +424,13 @@ pub fn generate(
 
         #not
 
-        impl #impl_generics std::ops::BitAnd for #name #type_generics #where_clause {
-            type Output = Self;
+        #bitand
+        #bitand_assign
 
-            fn bitand(self, rhs: Self) -> Self::Output {
-                Self::new(self.x & rhs.x, self.y & rhs.y, self.z & rhs.z)
-            }
-        }
+        #bitor
+        #bitor_assign
 
-        impl #impl_generics std::ops::BitAndAssign for #name #type_generics #where_clause {
-            fn bitand_assign(&mut self, rhs: Self) {
-                *self = self.to_owned() & rhs;
-            }
-        }
-
-        impl #impl_generics std::ops::BitOr for #name #type_generics #where_clause {
-            type Output = Self;
-
-            fn bitor(self, rhs: Self) -> Self::Output {
-                Self::new(self.x | rhs.x, self.y | rhs.y, self.z | rhs.z)
-            }
-        }
-
-        impl #impl_generics std::ops::BitOrAssign for #name #type_generics #where_clause {
-            fn bitor_assign(&mut self, rhs: Self) {
-                *self = self.to_owned() | rhs;
-            }
-        }
-
-        impl #impl_generics std::ops::BitXor for #name #type_generics #where_clause {
-            type Output = Self;
-
-            fn bitxor(self, rhs: Self) -> Self::Output {
-                Self::new(self.x ^ rhs.x, self.y ^ rhs.y, self.z ^ rhs.z)
-            }
-        }
-
-        impl #impl_generics std::ops::BitXorAssign for #name #type_generics #where_clause {
-            fn bitxor_assign(&mut self, rhs: Self) {
-                *self = self.to_owned() ^ rhs;
-            }
-        }
+        #bitxor
+        #bitxor_assign
     }
 }
