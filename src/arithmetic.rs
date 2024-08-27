@@ -2,6 +2,30 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{DeriveInput, GenericParam, Ident, ImplGenerics, TypeGenerics, WhereClause};
 
+fn signed_extras(
+    ast: &DeriveInput,
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> Option<TokenStream> {
+    match ast.attrs.get(0) {
+        Some(attr) => match attr.path().is_ident("signed") {
+            true => Some(quote! {
+                impl #impl_generics std::ops::Neg for #name #type_generics #where_clause {
+                    type Output = #name #type_generics;
+
+                    fn neg(self) -> Self::Output {
+                        Self::new(-self.x, -self.y, -self.z)
+                    }
+                }
+            }),
+            false => None,
+        },
+        None => None,
+    }
+}
+
 pub fn generate(
     ast: &DeriveInput,
     name: &Ident,
@@ -10,20 +34,7 @@ pub fn generate(
     where_clause: &Option<&WhereClause>,
     generic: &GenericParam,
 ) -> TokenStream {
-    let mut signed_extras = proc_macro2::TokenStream::new();
-    if let Some(attr) = ast.attrs.get(0) {
-        if attr.path().is_ident("signed") {
-            signed_extras = quote! {
-                impl #impl_generics std::ops::Neg for #name #type_generics #where_clause {
-                    type Output = #name #type_generics;
-
-                    fn neg(self) -> Self::Output {
-                        Self::new(-self.x, -self.y, -self.z)
-                    }
-                }
-            };
-        }
-    }
+    let signed_extras = signed_extras(&ast, &name, &impl_generics, &type_generics, &where_clause);
 
     quote! {
         #signed_extras
