@@ -212,6 +212,23 @@ fn rem_assign(
     }
 }
 
+fn not(
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    type_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> TokenStream {
+    quote! {
+        impl #impl_generics std::ops::Not for #name #type_generics #where_clause {
+            type Output = #name #type_generics;
+
+            fn not(self) -> Self::Output {
+                Self::new(!self.x, !self.y, !self.z)
+            }
+        }
+    }
+}
+
 pub fn generate(
     ast: &DeriveInput,
     name: &Ident,
@@ -269,6 +286,7 @@ pub fn generate(
         &where_clause,
         &generic,
     );
+
     let rem_assign = rem_assign(
         &name,
         &impl_generics,
@@ -276,6 +294,8 @@ pub fn generate(
         &where_clause,
         &generic,
     );
+
+    let not = not(&name, &impl_generics, &type_generics, &where_clause);
 
     quote! {
         #neg
@@ -295,13 +315,7 @@ pub fn generate(
         #rem
         #rem_assign
 
-        impl #impl_generics std::ops::Not for #name #type_generics #where_clause {
-            type Output = #name #type_generics;
-
-            fn not(self) -> Self::Output {
-                Self::new(!self.x, !self.y, !self.z)
-            }
-        }
+        #not
 
         impl #impl_generics std::ops::BitAnd for #name #type_generics #where_clause {
             type Output = Self;
