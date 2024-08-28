@@ -4,8 +4,8 @@ use quote::quote;
 use crate::tokens::Tokens;
 
 macro_rules! operation {
-    ($trait_name:ident, $func_name:ident, $operation:ident, $operation_failure_message:literal) => {
-        fn $func_name (tokens: &Tokens) -> TokenStream {
+    ($tokens:ident, $trait_name:ident, $func_name:ident, $operation:ident, $operation_failure_message:literal) => {
+        (|tokens: &Tokens| -> TokenStream {
             let (_, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
             quote! {
                 impl #impl_generics std::ops::$trait_name for #name #type_generics #where_clause {
@@ -20,10 +20,10 @@ macro_rules! operation {
                     }
                 }
             }
-        }
+        })(&$tokens)
     };
-    ($trait_name:ident, $func_name:ident, $op:tt) => {
-        fn $func_name(tokens: &Tokens) -> TokenStream {
+    ($tokens:ident, $trait_name:ident, $func_name:ident, $op:tt) => {
+        (|tokens: &Tokens| -> TokenStream {
             let (_, name, impl_generics, type_generics, where_clause, _) = tokens.split();
             quote! {
                 impl #impl_generics std::ops::$trait_name for #name #type_generics #where_clause {
@@ -34,38 +34,9 @@ macro_rules! operation {
                     }
                 }
             }
-        }
+        })(&$tokens)
     };
 }
-
-operation!(
-    Add,
-    add,
-    checked_add,
-    "{} is experiencing integer overflow after adding by {}."
-);
-operation!(
-    Sub,
-    sub,
-    checked_sub,
-    "{} is experiencing integer overflow after subtracting by {}."
-);
-operation!(
-    Mul,
-    mul,
-    checked_mul,
-    "{} is experiencing integer overflow after multiplying by {}."
-);
-operation!(
-    Div,
-    div,
-    checked_div,
-    "{} encountered a problem while being divided by {}."
-);
-
-operation!(BitAnd, bitand, &);
-operation!(BitOr, bitor, |);
-operation!(BitXor, bitxor, ^);
 
 fn rem(tokens: &Tokens) -> TokenStream {
     let (_, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
@@ -205,13 +176,37 @@ fn neg(tokens: &Tokens) -> Option<TokenStream> {
 }
 
 pub fn generate(tokens: &Tokens) -> TokenStream {
-    let add = add(&tokens);
-    let sub = sub(&tokens);
-    let mul = mul(&tokens);
-    let div = div(&tokens);
-    let bitand = bitand(&tokens);
-    let bitor = bitor(&tokens);
-    let bitxor = bitxor(&tokens);
+    let add = operation!(
+        tokens,
+        Add,
+        add,
+        checked_add,
+        "{} is experiencing integer overflow after adding by {}."
+    );
+    let sub = operation!(
+        tokens,
+        Sub,
+        sub,
+        checked_sub,
+        "{} is experiencing integer overflow after subtracting by {}."
+    );
+    let mul = operation!(
+        tokens,
+        Mul,
+        mul,
+        checked_mul,
+        "{} is experiencing integer overflow after multiplying by {}."
+    );
+    let div = operation!(
+        tokens,
+        Div,
+        div,
+        checked_div,
+        "{} encountered a problem while being divided by {}."
+    );
+    let bitand = operation!(tokens, BitAnd, bitand, &);
+    let bitor = operation!(tokens, BitOr, bitor, |);
+    let bitxor = operation!(tokens, BitXor, bitxor, ^);
 
     let rem = rem(&tokens);
 
