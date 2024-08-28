@@ -1,13 +1,12 @@
+use tokens::Tokens;
+
 mod arithmetic;
 mod tokens;
 
 #[proc_macro_derive(Coordinate, attributes(signed))]
 pub fn coordinate_trait_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let ast: syn::DeriveInput = syn::parse(input).unwrap();
-
-    let name = &ast.ident;
-    let (impl_generics, type_generics, where_clause) = ast.generics.split_for_impl();
-    let generic = ast.generics.params.first().unwrap();
+    let tokens = Tokens::from(input);
+    let (ast, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
 
     let coord_trait = quote::quote! {
         impl #impl_generics CoordinateTrait for #name #type_generics #where_clause {
