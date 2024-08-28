@@ -2,7 +2,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{DeriveInput, GenericParam, Ident, ImplGenerics, TypeGenerics, WhereClause};
 
-macro_rules! arithmetic_operation {
+macro_rules! operation {
     ($trait_name:ident, $func_name:ident, $operation:ident, $operation_failure_message:literal) => {
         fn $func_name (
             name: &Ident,
@@ -14,7 +14,7 @@ macro_rules! arithmetic_operation {
             quote! {
                 impl #impl_generics std::ops::$trait_name for #name #type_generics #where_clause {
                     type Output = Self;
-        
+
                     fn $func_name(self, rhs: #name #type_generics) -> Self::Output {
                         let panic_if_out_of_bounds = || panic!($operation_failure_message, self, rhs);
                         let x = #generic::$operation(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
@@ -26,62 +26,54 @@ macro_rules! arithmetic_operation {
             }
         }
     };
-}
+    ($trait_name:ident, $func_name:ident, $op:tt) => {
+        fn $func_name(
+            name: &Ident,
+            impl_generics: &ImplGenerics,
+            type_generics: &TypeGenerics,
+            where_clause: &Option<&WhereClause>,
+        ) -> TokenStream {
+            quote! {
+                impl #impl_generics std::ops::$trait_name for #name #type_generics #where_clause {
+                    type Output = Self;
 
-arithmetic_operation!(Add, add, checked_add, "{} is experiencing integer overflow after adding by {}.");
-arithmetic_operation!(Sub, sub, checked_sub, "{} is experiencing integer overflow after subtracting by {}.");
-arithmetic_operation!(Mul, mul, checked_mul, "{} is experiencing integer overflow after multiplying by {}.");
-arithmetic_operation!(Div, div, checked_div, "{} encountered a problem while being divided by {}.");
-
-fn bitand(
-    name: &Ident,
-    impl_generics: &ImplGenerics,
-    type_generics: &TypeGenerics,
-    where_clause: &Option<&WhereClause>,
-) -> TokenStream {
-    quote! {impl #impl_generics std::ops::BitAnd for #name #type_generics #where_clause {
-        type Output = Self;
-
-        fn bitand(self, rhs: Self) -> Self::Output {
-            Self::new(self.x & rhs.x, self.y & rhs.y, self.z & rhs.z)
-        }
-    }
-    }
-}
-
-fn bitor(
-    name: &Ident,
-    impl_generics: &ImplGenerics,
-    type_generics: &TypeGenerics,
-    where_clause: &Option<&WhereClause>,
-) -> TokenStream {
-    quote! {
-        impl #impl_generics std::ops::BitOr for #name #type_generics #where_clause {
-            type Output = Self;
-
-            fn bitor(self, rhs: Self) -> Self::Output {
-                Self::new(self.x | rhs.x, self.y | rhs.y, self.z | rhs.z)
+                    fn $func_name(self, rhs: Self) -> Self::Output {
+                        Self::new(self.x $op rhs.x, self.y $op rhs.y, self.z $op rhs.z)
+                    }
+                }
             }
         }
-    }
+    };
 }
 
-fn bitxor(
-    name: &Ident,
-    impl_generics: &ImplGenerics,
-    type_generics: &TypeGenerics,
-    where_clause: &Option<&WhereClause>,
-) -> TokenStream {
-    quote! {
-        impl #impl_generics std::ops::BitXor for #name #type_generics #where_clause {
-            type Output = Self;
+operation!(
+    Add,
+    add,
+    checked_add,
+    "{} is experiencing integer overflow after adding by {}."
+);
+operation!(
+    Sub,
+    sub,
+    checked_sub,
+    "{} is experiencing integer overflow after subtracting by {}."
+);
+operation!(
+    Mul,
+    mul,
+    checked_mul,
+    "{} is experiencing integer overflow after multiplying by {}."
+);
+operation!(
+    Div,
+    div,
+    checked_div,
+    "{} encountered a problem while being divided by {}."
+);
 
-            fn bitxor(self, rhs: Self) -> Self::Output {
-                Self::new(self.x ^ rhs.x, self.y ^ rhs.y, self.z ^ rhs.z)
-            }
-        }
-    }
-}
+operation!(BitAnd, bitand, &);
+operation!(BitOr, bitor, |);
+operation!(BitXor, bitxor, ^);
 
 fn rem(
     name: &Ident,
