@@ -5,17 +5,16 @@ pub struct Tokens {
 }
 
 impl Tokens {
-    pub fn split(&self) -> (&Ident, ImplGenerics, TypeGenerics, Option<&WhereClause>, &GenericParam) {
-        let name = &self.ast.ident;
+    pub fn split(&self) -> (&DeriveInput, &Ident, ImplGenerics, TypeGenerics, Option<&WhereClause>, &GenericParam) {
         let (impl_generics, type_generics, where_clause) = self.ast.generics.split_for_impl();
-        let generic = self.ast.generics.params.first().unwrap();
 
         (
-            name,
+            &self.ast,
+            &self.ast.ident,
             impl_generics,
             type_generics,
             where_clause,
-            generic,
+            self.ast.generics.params.first().unwrap(),
         )
     }
 }
