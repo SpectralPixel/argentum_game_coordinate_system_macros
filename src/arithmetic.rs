@@ -12,7 +12,7 @@ macro_rules! operation {
                     type Output = Self;
 
                     fn $func_name(self, rhs: Self) -> Self::Output {
-                        let panic_if_out_of_bounds = || panic!($operation_failure_message, self, rhs);
+                        let panic_if_out_of_bounds = || panic!("{} cannot be {} by {}", self, $operation_failure_message, rhs);
                         let x = #generic::$operation(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
                         let y = #generic::$operation(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds);
                         let z = #generic::$operation(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds);
@@ -176,34 +176,10 @@ fn neg(tokens: &Tokens) -> Option<TokenStream> {
 }
 
 pub fn generate(tokens: &Tokens) -> TokenStream {
-    let add = operation!(
-        tokens,
-        Add,
-        add,
-        checked_add,
-        "{} is experiencing integer overflow after adding by {}."
-    );
-    let sub = operation!(
-        tokens,
-        Sub,
-        sub,
-        checked_sub,
-        "{} is experiencing integer overflow after subtracting by {}."
-    );
-    let mul = operation!(
-        tokens,
-        Mul,
-        mul,
-        checked_mul,
-        "{} is experiencing integer overflow after multiplying by {}."
-    );
-    let div = operation!(
-        tokens,
-        Div,
-        div,
-        checked_div,
-        "{} encountered a problem while being divided by {}."
-    );
+    let add = operation!(tokens, Add, add, checked_add, "added");
+    let sub = operation!(tokens, Sub, sub, checked_sub, "subtracted");
+    let mul = operation!(tokens, Mul, mul, checked_mul, "multiplied");
+    let div = operation!(tokens, Div, div, checked_div, "divided");
     let bitand = operation!(tokens, BitAnd, bitand, &);
     let bitor = operation!(tokens, BitOr, bitor, |);
     let bitxor = operation!(tokens, BitXor, bitxor, ^);
