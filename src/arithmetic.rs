@@ -1,36 +1,52 @@
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
+use syn::Ident;
 
 use crate::tokens::Tokens;
 
 macro_rules! operation_inner {
-    ($tokens:ident, $trait_name:ident, $func_name:ident, $operation:ident, $operation_failure_message:literal, $failed_op:literal) => {
+    ($tokens:ident, $op:ident, $operation_failure_message:literal, $failed_op:literal) => {
         (|tokens: &Tokens| -> TokenStream {
             let (_, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
+
+            let op = stringify!($op);
+            let lower_op = op.to_lowercase();
+
+            let trait_name = Ident::new(op, Span::mixed_site());
+            let func_name = Ident::new(&lower_op, Span::mixed_site());
+            let operation = Ident::new(&format!("checked_{}", lower_op), Span::mixed_site());
+
             quote! {
-                impl #impl_generics std::ops::$trait_name for #name #type_generics #where_clause {
+                impl #impl_generics std::ops::#trait_name for #name #type_generics #where_clause {
                     type Output = Self;
 
-                    fn $func_name(self, rhs: Self) -> Self::Output {
+                    fn #func_name(self, rhs: Self) -> Self::Output {
                         let panic_if_out_of_bounds = || panic!($operation_failure_message, self, $failed_op, rhs);
-                        let x = #generic::$operation(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
-                        let y = #generic::$operation(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds);
-                        let z = #generic::$operation(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds);
+                        let x = #generic::#operation(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
+                        let y = #generic::#operation(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds);
+                        let z = #generic::#operation(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds);
                         Self::new(x, y, z)
                     }
                 }
             }
         })(&$tokens)
     };
-    ($tokens:ident, $trait_name:ident, $func_name:ident, $op:tt) => {
+    ($tokens:ident, $op:ident, $sym:tt) => {
         (|tokens: &Tokens| -> TokenStream {
             let (_, name, impl_generics, type_generics, where_clause, _) = tokens.split();
+
+            let op = stringify!($op);
+            let lower_op = op.to_lowercase();
+
+            let trait_name = Ident::new(op, Span::mixed_site());
+            let func_name = Ident::new(&lower_op, Span::mixed_site());
+
             quote! {
-                impl #impl_generics std::ops::$trait_name for #name #type_generics #where_clause {
+                impl #impl_generics std::ops::#trait_name for #name #type_generics #where_clause {
                     type Output = Self;
 
-                    fn $func_name(self, rhs: Self) -> Self::Output {
-                        Self::new(self.x $op rhs.x, self.y $op rhs.y, self.z $op rhs.z)
+                    fn #func_name(self, rhs: Self) -> Self::Output {
+                        Self::new(self.x $sym rhs.x, self.y $sym rhs.y, self.z $sym rhs.z)
                     }
                 }
             }
@@ -39,14 +55,19 @@ macro_rules! operation_inner {
 }
 
 macro_rules! operation {
-    ($tokens:ident, $trait_name:ident, $func_name:ident, $operation:ident, $failed_op:literal) => {
-        operation_inner!($tokens, $trait_name, $func_name, $operation, "{} is experiencing integer overflow after {} by {}.", $failed_op)
+    ($tokens:ident, $op:ident, $failed_op:literal) => {
+        operation_inner!(
+            $tokens,
+            $op,
+            "{} is experiencing integer overflow after {} by {}.",
+            $failed_op
+        )
     };
-    ($tokens:ident, $trait_name:ident, $func_name:ident, $operation:ident) => {
-        operation_inner!($tokens, $trait_name, $func_name, $operation, "{} cannot be {} by {}.", "divided")
+    ($tokens:ident, $op:ident) => {
+        operation_inner!($tokens, $op, "{} cannot be {} by {}.", "divided")
     };
-    ($tokens:ident, $trait_name:ident, $func_name:ident, $op:tt) => {
-        operation_inner!($tokens, $trait_name, $func_name, $op)
+    ($tokens:ident, $op:ident, $sym:tt) => {
+        operation_inner!($tokens, $op, $sym)
     };
 }
 
@@ -188,13 +209,13 @@ fn neg(tokens: &Tokens) -> Option<TokenStream> {
 }
 
 pub fn generate(tokens: &Tokens) -> TokenStream {
-    let add = operation!(tokens, Add, add, checked_add, "added");
-    let sub = operation!(tokens, Sub, sub, checked_sub, "subtracted");
-    let mul = operation!(tokens, Mul, mul, checked_mul, "multiplied");
-    let div = operation!(tokens, Div, div, checked_div);
-    let bitand = operation!(tokens, BitAnd, bitand, &);
-    let bitor = operation!(tokens, BitOr, bitor, |);
-    let bitxor = operation!(tokens, BitXor, bitxor, ^);
+    let add = operation!(tokens, Add, "added");
+    let sub = operation!(tokens, Sub, "subtracted");
+    let mul = operation!(tokens, Mul, "multiplied");
+    let div = operation!(tokens, Div);
+    let bitand = operation!(tokens, BitAnd, &);
+    let bitor = operation!(tokens, BitOr, |);
+    let bitxor = operation!(tokens, BitXor, ^);
 
     let rem = rem(&tokens);
 
