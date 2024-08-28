@@ -5,7 +5,16 @@ pub struct Tokens {
 }
 
 impl Tokens {
-    pub fn split(&self) -> (&DeriveInput, &Ident, ImplGenerics, TypeGenerics, Option<&WhereClause>, &GenericParam) {
+    pub fn split(
+        &self,
+    ) -> (
+        &DeriveInput,
+        &Ident,
+        ImplGenerics,
+        TypeGenerics,
+        Option<&WhereClause>,
+        &GenericParam,
+    ) {
         let (impl_generics, type_generics, where_clause) = self.ast.generics.split_for_impl();
 
         (
@@ -21,6 +30,8 @@ impl Tokens {
 
 impl From<proc_macro::TokenStream> for Tokens {
     fn from(value: proc_macro::TokenStream) -> Self {
-        Self { ast: syn::parse(value).unwrap() }
+        Self {
+            ast: syn::parse(value).unwrap(),
+        }
     }
 }
