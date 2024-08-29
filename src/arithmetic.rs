@@ -64,7 +64,7 @@ macro_rules! operation {
             $failed_op
         )
     };
-    ($tokens:ident, $op:ident) => {
+    ($tokens:ident, $op:ident, "divided") => {
         operation_inner!($tokens, $op, "{} cannot be {} by {}.", "divided")
     };
     ($tokens:ident, $op:ident, $sym:tt) => {
@@ -213,7 +213,7 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
     let add = operation!(tokens, Add, "added");
     let sub = operation!(tokens, Sub, "subtracted");
     let mul = operation!(tokens, Mul, "multiplied");
-    let div = operation!(tokens, Div);
+    let div = operation!(tokens, Div, "divided");
     let bitand = operation!(tokens, BitAnd, &);
     let bitor = operation!(tokens, BitOr, |);
     let bitxor = operation!(tokens, BitXor, ^);
