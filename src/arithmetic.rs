@@ -5,7 +5,7 @@ use syn::Ident;
 use crate::tokens::Tokens;
 
 macro_rules! operation_inner {
-    ($tokens:ident, $op:ident, $operation_failure_message:literal, $failed_op:literal) => {
+    ($tokens:ident, $op:ident, $operation_failure_message:block) => {
         (|tokens: &Tokens| -> TokenStream {
             let (_, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
 
@@ -21,11 +21,10 @@ macro_rules! operation_inner {
                     type Output = Self;
 
                     fn #func_name(self, rhs: Self) -> Self::Output {
-                        let panic_if_out_of_bounds = || panic!($operation_failure_message, self, $failed_op, rhs);
                         Self::new(
-                            #generic::#operation(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds),
-                            #generic::#operation(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds),
-                            #generic::#operation(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds),
+                            #generic::#operation(&self.x, &rhs.x).unwrap_or_else($operation_failure_message),
+                            #generic::#operation(&self.y, &rhs.y).unwrap_or_else($operation_failure_message),
+                            #generic::#operation(&self.z, &rhs.z).unwrap_or_else($operation_failure_message),
                         )
                     }
                 }
@@ -57,15 +56,19 @@ macro_rules! operation_inner {
 
 macro_rules! operation {
     ($tokens:ident, $op:ident, $failed_op:literal) => {
-        operation_inner!(
-            $tokens,
-            $op,
-            "{} is experiencing integer overflow after {} by {}.",
-            $failed_op
-        )
+        operation_inner!($tokens, $op, {
+            || {
+                panic!(
+                    "{} is experiencing integer overflow after {} by {}.",
+                    self, $failed_op, rhs
+                )
+            }
+        })
     };
     ($tokens:ident, $op:ident, "divided") => {
-        operation_inner!($tokens, $op, "{} cannot be {} by {}.", "divided")
+        operation_inner!($tokens, $op, {
+            || panic!("{} cannot be divided by {}.", self, rhs)
+        })
     };
     ($tokens:ident, $op:ident, $sym:tt) => {
         operation_inner!($tokens, $op, $sym)
