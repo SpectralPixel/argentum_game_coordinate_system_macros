@@ -22,10 +22,11 @@ macro_rules! operation_inner {
 
                     fn #func_name(self, rhs: Self) -> Self::Output {
                         let panic_if_out_of_bounds = || panic!($operation_failure_message, self, $failed_op, rhs);
-                        let x = #generic::#operation(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds);
-                        let y = #generic::#operation(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds);
-                        let z = #generic::#operation(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds);
-                        Self::new(x, y, z)
+                        Self::new(
+                            #generic::#operation(&self.x, &rhs.x).unwrap_or_else(panic_if_out_of_bounds),
+                            #generic::#operation(&self.y, &rhs.y).unwrap_or_else(panic_if_out_of_bounds),
+                            #generic::#operation(&self.z, &rhs.z).unwrap_or_else(panic_if_out_of_bounds),
+                        )
                     }
                 }
             }
