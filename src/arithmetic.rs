@@ -4,8 +4,28 @@ use syn::Ident;
 
 use crate::tokens::Tokens;
 
+macro_rules! gen_op_single {
+    ($component:ident, $generic:ident, $op_name:ident, $operation_failure:block) => {
+        (|| {
+            quote! {
+                #$generic::#$op_name(&self.$component, &rhs).unwrap_or_else($operation_failure)
+            }
+        })()
+    };
+}
+
+macro_rules! gen_op_xyz {
+    ($component:ident, $generic:ident, $op_name:ident, $operation_failure:block) => {
+        (|| {
+            quote! {
+                #$generic::#$op_name(&self.$component, &rhs.$component).unwrap_or_else($operation_failure)
+            }
+        })()
+    };
+}
+
 macro_rules! operation_inner {
-    ($tokens:ident, $op:ident, $operation_failure_message:block) => {
+    ($tokens:ident, $op:ident, $operation_failure:block) => {
         (|tokens: &Tokens| -> TokenStream {
             let (_, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
 
@@ -14,7 +34,11 @@ macro_rules! operation_inner {
 
             let trait_name = Ident::new(op, Span::mixed_site());
             let func_name = Ident::new(&lower_op, Span::mixed_site());
-            let operation = Ident::new(&format!("checked_{}", lower_op), Span::mixed_site());
+            let op_name = Ident::new(&format!("checked_{}", lower_op), Span::mixed_site());
+
+            let op_x = gen_op_xyz!(x, generic, op_name, $operation_failure);
+            let op_y = gen_op_xyz!(y, generic, op_name, $operation_failure);
+            let op_z = gen_op_xyz!(z, generic, op_name, $operation_failure);
 
             quote! {
                 impl #impl_generics std::ops::#trait_name for #name #type_generics #where_clause {
@@ -22,9 +46,9 @@ macro_rules! operation_inner {
 
                     fn #func_name(self, rhs: Self) -> Self::Output {
                         Self::new(
-                            #generic::#operation(&self.x, &rhs.x).unwrap_or_else($operation_failure_message),
-                            #generic::#operation(&self.y, &rhs.y).unwrap_or_else($operation_failure_message),
-                            #generic::#operation(&self.z, &rhs.z).unwrap_or_else($operation_failure_message),
+                            #op_x,
+                            #op_y,
+                            #op_z,
                         )
                     }
                 }
