@@ -99,7 +99,7 @@ macro_rules! operation_xyz {
     };
 }
 
-fn rem(tokens: &Tokens) -> TokenStream {
+fn rem_single(tokens: &Tokens) -> TokenStream {
     let (_, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
     quote! {
         impl #impl_generics std::ops::Rem<#generic> for #name #type_generics #where_clause {
@@ -193,7 +193,7 @@ fn bitxor_assign(tokens: &Tokens) -> TokenStream {
     }
 }
 
-fn rem_assign(tokens: &Tokens) -> TokenStream {
+fn rem_assign_single(tokens: &Tokens) -> TokenStream {
     let (_, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
     quote! {
         impl #impl_generics std::ops::RemAssign<#generic> for #name #type_generics #where_clause {
@@ -245,7 +245,7 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
     let bitor = operation_xyz!(tokens, BitOr, |);
     let bitxor = operation_xyz!(tokens, BitXor, ^);
 
-    let rem = rem(&tokens);
+    let rem_single = rem_single(&tokens);
 
     let add_assign = add_assign(&tokens);
     let sub_assign = sub_assign(&tokens);
@@ -255,7 +255,7 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
     let bitor_assign = bitor_assign(&tokens);
     let bitxor_assign = bitxor_assign(&tokens);
 
-    let rem_assign = rem_assign(&tokens);
+    let rem_assign_single = rem_assign_single(&tokens);
 
     let not = not(&tokens);
     let neg = neg(&tokens);
@@ -269,7 +269,7 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
         #bitor
         #bitxor
 
-        #rem
+        #rem_single
 
         #add_assign
         #sub_assign
@@ -279,7 +279,7 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
         #bitor_assign
         #bitxor_assign
 
-        #rem_assign
+        #rem_assign_single
 
         #not
         #neg
