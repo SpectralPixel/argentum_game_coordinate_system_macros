@@ -175,7 +175,7 @@ macro_rules! operation_inner {
     };
 }
 
-macro_rules! operation_xyz {
+macro_rules! operation {
     ($tokens:ident, $op:ident, $failed_op:literal) => {
         operation_inner!($tokens, $op, {
             || {
@@ -334,13 +334,13 @@ fn neg(tokens: &Tokens) -> Option<TokenStream> {
 }
 
 pub fn generate(tokens: &Tokens) -> TokenStream {
-    let add = operation_xyz!(tokens, Add, "added");
-    let sub = operation_xyz!(tokens, Sub, "subtracted");
-    let mul = operation_xyz!(tokens, Mul, "multiplied");
-    let div = operation_xyz!(tokens, Div, "divided");
-    let bitand = operation_xyz!(tokens, BitAnd, &);
-    let bitor = operation_xyz!(tokens, BitOr, |);
-    let bitxor = operation_xyz!(tokens, BitXor, ^);
+    let add = operation!(tokens, Add, "added");
+    let sub = operation!(tokens, Sub, "subtracted");
+    let mul = operation!(tokens, Mul, "multiplied");
+    let div = operation!(tokens, Div, "divided");
+    let bitand = operation!(tokens, BitAnd, &);
+    let bitor = operation!(tokens, BitOr, |);
+    let bitxor = operation!(tokens, BitXor, ^);
 
     let rem_single = rem_single(&tokens);
 
