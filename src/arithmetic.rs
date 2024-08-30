@@ -125,7 +125,7 @@ macro_rules! operation_quote {
     };
 }
 
-macro_rules! operation_inner {
+macro_rules! operation_inner_xyz {
     ($tokens:ident, $op:ident, $operation_failure:block) => {
         (|| -> TokenStream {
             let (
@@ -194,9 +194,9 @@ macro_rules! operation_inner {
     };
 }
 
-macro_rules! operation {
+macro_rules! operation_xyz {
     ($tokens:ident, $op:ident, $failed_op:literal) => {
-        operation_inner!($tokens, $op, {
+        operation_inner_xyz!($tokens, $op, {
             || {
                 panic!(
                     "{} is experiencing integer overflow after {} by {}.",
@@ -206,12 +206,12 @@ macro_rules! operation {
         })
     };
     ($tokens:ident, $op:ident, "divided") => {
-        operation_inner!($tokens, $op, {
+        operation_inner_xyz!($tokens, $op, {
             || panic!("{} cannot be divided by {}.", self, rhs)
         })
     };
     ($tokens:ident, $op:ident, $sym:tt) => {
-        operation_inner!($tokens, $op, $sym)
+        operation_inner_xyz!($tokens, $op, $sym)
     };
 }
 
@@ -353,13 +353,13 @@ fn neg(tokens: &Tokens) -> Option<TokenStream> {
 }
 
 pub fn generate(tokens: &Tokens) -> TokenStream {
-    let add = operation!(tokens, Add, "added");
-    let sub = operation!(tokens, Sub, "subtracted");
-    let mul = operation!(tokens, Mul, "multiplied");
-    let div = operation!(tokens, Div, "divided");
-    let bitand = operation!(tokens, BitAnd, &);
-    let bitor = operation!(tokens, BitOr, |);
-    let bitxor = operation!(tokens, BitXor, ^);
+    let add = operation_xyz!(tokens, Add, "added");
+    let sub = operation_xyz!(tokens, Sub, "subtracted");
+    let mul = operation_xyz!(tokens, Mul, "multiplied");
+    let div = operation_xyz!(tokens, Div, "divided");
+    let bitand = operation_xyz!(tokens, BitAnd, &);
+    let bitor = operation_xyz!(tokens, BitOr, |);
+    let bitxor = operation_xyz!(tokens, BitXor, ^);
 
     let rem_single = rem_single(&tokens);
 
