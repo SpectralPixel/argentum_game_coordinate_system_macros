@@ -81,6 +81,44 @@ macro_rules! get_operation_variables {
     };
 }
 
+macro_rules! operation_quote {
+    ($impl_generics:ident, $trait_name:ident, $name:ident, $type_generics:ident, $where_clause:ident, $func_name:ident, $op_x:ident, $op_y:ident, $op_z:ident) => {
+        (|impl_generics: TokenStream,
+          trait_name: Ident,
+          name: Ident,
+          type_generics: TokenStream,
+          where_clause: Option<WhereClause>,
+          func_name: Ident,
+          op_x: TokenStream,
+          op_y: TokenStream,
+          op_z: TokenStream| {
+            quote! {
+                impl #impl_generics std::ops::#trait_name for #name #type_generics #where_clause {
+                    type Output = Self;
+
+                    fn #func_name(self, rhs: Self) -> Self::Output {
+                        Self::new(
+                            #op_x,
+                            #op_y,
+                            #op_z,
+                        )
+                    }
+                }
+            }
+        })(
+            $impl_generics,
+            $trait_name,
+            $name,
+            $type_generics,
+            $where_clause,
+            $func_name,
+            $op_x,
+            $op_y,
+            $op_z,
+        )
+    };
+}
+
 macro_rules! operation_inner {
     ($tokens:ident, $op:ident, $operation_failure:block) => {
         (|| -> TokenStream {
@@ -100,19 +138,17 @@ macro_rules! operation_inner {
             let op_y = gen_op_xyz!(y, generic, op_name, $operation_failure);
             let op_z = gen_op_xyz!(z, generic, op_name, $operation_failure);
 
-            quote! {
-                impl #impl_generics std::ops::#trait_name for #name #type_generics #where_clause {
-                    type Output = Self;
-
-                    fn #func_name(self, rhs: Self) -> Self::Output {
-                        Self::new(
-                            #op_x,
-                            #op_y,
-                            #op_z,
-                        )
-                    }
-                }
-            }
+            operation_quote!(
+                impl_generics,
+                trait_name,
+                name,
+                type_generics,
+                where_clause,
+                func_name,
+                op_x,
+                op_y,
+                op_z
+            )
         })()
     };
     ($tokens:ident, $op:ident, $sym:tt) => {
@@ -124,19 +160,17 @@ macro_rules! operation_inner {
             let op_y = gen_op_xyz!(y, $sym);
             let op_z = gen_op_xyz!(z, $sym);
 
-            quote! {
-                impl #impl_generics std::ops::#trait_name for #name #type_generics #where_clause {
-                    type Output = Self;
-
-                    fn #func_name(self, rhs: Self) -> Self::Output {
-                        Self::new(
-                            #op_x,
-                            #op_y,
-                            #op_z,
-                        )
-                    }
-                }
-            }
+            operation_quote!(
+                impl_generics,
+                trait_name,
+                name,
+                type_generics,
+                where_clause,
+                func_name,
+                op_x,
+                op_y,
+                op_z
+            )
         })()
     };
 }
