@@ -39,7 +39,7 @@ macro_rules! gen_op_xyz {
 }
 
 macro_rules! get_operation_variables {
-    ($tokens:ident, $op:ident, $impl_for:ident) => {
+    ($tokens:ident, $op:ident) => {
         (|tokens: &Tokens| -> (
             DeriveInput,
             Ident,
@@ -50,7 +50,6 @@ macro_rules! get_operation_variables {
             Ident,
             Ident,
             Ident,
-            TokenStream,
         ) {
             let (ast, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
 
@@ -67,8 +66,6 @@ macro_rules! get_operation_variables {
                 None => None,
             };
 
-            let impl_for = quote!(<$impl_for>);
-
             (
                 ast.clone(),
                 name.clone(),
@@ -79,17 +76,15 @@ macro_rules! get_operation_variables {
                 trait_name,
                 func_name,
                 op_name,
-                impl_for,
             )
         })(&$tokens)
     };
 }
 
 macro_rules! operation_quote {
-    ($impl_generics:ident, $trait_name:ident, $impl_for:ident, $name:ident, $type_generics:ident, $where_clause:ident, $func_name:ident, $op_x:ident, $op_y:ident, $op_z:ident) => {
+    ($impl_generics:ident, $trait_name:ident, $name:ident, $type_generics:ident, $where_clause:ident, $func_name:ident, $op_x:ident, $op_y:ident, $op_z:ident) => {
         (|impl_generics: TokenStream,
           trait_name: Ident,
-          impl_for: TokenStream,
           name: Ident,
           type_generics: TokenStream,
           where_clause: Option<WhereClause>,
@@ -98,7 +93,7 @@ macro_rules! operation_quote {
           op_y: TokenStream,
           op_z: TokenStream| {
             quote! {
-                impl #impl_generics std::ops::#trait_name #impl_for for #name #type_generics #where_clause {
+                impl #impl_generics std::ops::#trait_name for #name #type_generics #where_clause {
                     type Output = Self;
 
                     fn #func_name(self, rhs: Self) -> Self::Output {
@@ -113,7 +108,43 @@ macro_rules! operation_quote {
         })(
             $impl_generics,
             $trait_name,
-            $impl_for,
+            $name,
+            $type_generics,
+            $where_clause,
+            $func_name,
+            $op_x,
+            $op_y,
+            $op_z,
+        )
+    };
+    ($impl_generics:ident, $trait_name:ident, $generic:ident, $name:ident, $type_generics:ident, $where_clause:ident, $func_name:ident, $op_x:ident, $op_y:ident, $op_z:ident) => {
+        (|impl_generics: TokenStream,
+          trait_name: Ident,
+          generic: GenericParam,
+          name: Ident,
+          type_generics: TokenStream,
+          where_clause: Option<WhereClause>,
+          func_name: Ident,
+          op_x: TokenStream,
+          op_y: TokenStream,
+          op_z: TokenStream| {
+            quote! {
+                impl #impl_generics std::ops::#trait_name<#generic> for #name #type_generics #where_clause {
+                    type Output = Self;
+
+                    fn #func_name(self, rhs: #generic) -> Self::Output {
+                        Self::new(
+                            #op_x,
+                            #op_y,
+                            #op_z,
+                        )
+                    }
+                }
+            }
+        })(
+            $impl_generics,
+            $trait_name,
+            $generic,
             $name,
             $type_generics,
             $where_clause,
@@ -138,8 +169,7 @@ macro_rules! operation_inner_xyz {
                 trait_name,
                 func_name,
                 op_name,
-                impl_for,
-            ) = get_operation_variables!($tokens, $op, Self);
+            ) = get_operation_variables!($tokens, $op);
 
             let op_x = gen_op_xyz!(x, generic, op_name, $operation_failure);
             let op_y = gen_op_xyz!(y, generic, op_name, $operation_failure);
@@ -148,7 +178,63 @@ macro_rules! operation_inner_xyz {
             operation_quote!(
                 impl_generics,
                 trait_name,
-                impl_for,
+                name,
+                type_generics,
+                where_clause,
+                func_name,
+                op_x,
+                op_y,
+                op_z
+            )
+        })()
+    };
+    ($tokens:ident, $op:ident, $sym:tt) => {
+        (|| -> TokenStream {
+            let (_, name, impl_generics, type_generics, where_clause, _, trait_name, func_name, _) =
+                get_operation_variables!($tokens, $op);
+
+            let op_x = gen_op_xyz!(x, $sym);
+            let op_y = gen_op_xyz!(y, $sym);
+            let op_z = gen_op_xyz!(z, $sym);
+
+            operation_quote!(
+                impl_generics,
+                trait_name,
+                name,
+                type_generics,
+                where_clause,
+                func_name,
+                op_x,
+                op_y,
+                op_z
+            )
+        })()
+    };
+}
+
+macro_rules! operation_inner_single {
+    ($tokens:ident, $op:ident, $operation_failure:block) => {
+        (|| -> TokenStream {
+            let (
+                _,
+                name,
+                impl_generics,
+                type_generics,
+                where_clause,
+                generic,
+                trait_name,
+                func_name,
+                op_name,
+            ) = get_operation_variables!($tokens, $op);
+
+            let op_x = gen_op_single!(x, generic, op_name, $operation_failure);
+            let op_y = gen_op_single!(y, generic, op_name, $operation_failure);
+            let op_z = gen_op_single!(z, generic, op_name, $operation_failure);
+
+            operation_quote!(
+                impl_generics,
+                trait_name,
+                generic,
                 name,
                 type_generics,
                 where_clause,
@@ -167,21 +253,20 @@ macro_rules! operation_inner_xyz {
                 impl_generics,
                 type_generics,
                 where_clause,
-                _,
+                generic,
                 trait_name,
                 func_name,
                 _,
-                impl_for,
-            ) = get_operation_variables!($tokens, $op, Self);
+            ) = get_operation_variables!($tokens, $op);
 
-            let op_x = gen_op_xyz!(x, $sym);
-            let op_y = gen_op_xyz!(y, $sym);
-            let op_z = gen_op_xyz!(z, $sym);
+            let op_x = gen_op_single!(x, $sym);
+            let op_y = gen_op_single!(y, $sym);
+            let op_z = gen_op_single!(z, $sym);
 
             operation_quote!(
                 impl_generics,
                 trait_name,
-                impl_for,
+                generic,
                 name,
                 type_generics,
                 where_clause,
@@ -215,21 +300,25 @@ macro_rules! operation_xyz {
     };
 }
 
-fn rem_single(tokens: &Tokens) -> TokenStream {
-    let (_, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
-    quote! {
-        impl #impl_generics std::ops::Rem<#generic> for #name #type_generics #where_clause {
-            type Output = Self;
-
-            fn rem(self, rhs: #generic) -> Self::Output {
-                Self::new(
-                    self.x % rhs,
-                    self.y % rhs,
-                    self.z % rhs,
+macro_rules! operation_single {
+    ($tokens:ident, $op:ident, $failed_op:literal) => {
+        operation_inner_single!($tokens, $op, {
+            || {
+                panic!(
+                    "{} is experiencing integer overflow after {} by {}.",
+                    self, $failed_op, rhs
                 )
             }
-        }
-    }
+        })
+    };
+    ($tokens:ident, $op:ident, "divided") => {
+        operation_inner_single!($tokens, $op, {
+            || panic!("{} cannot be divided by {}.", self, rhs)
+        })
+    };
+    ($tokens:ident, $op:ident, $sym:tt) => {
+        operation_inner_single!($tokens, $op, $sym)
+    };
 }
 
 fn add_assign(tokens: &Tokens) -> TokenStream {
@@ -361,7 +450,7 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
     let bitor = operation_xyz!(tokens, BitOr, |);
     let bitxor = operation_xyz!(tokens, BitXor, ^);
 
-    let rem_single = rem_single(&tokens);
+    let rem_single = operation_single!(tokens, Rem, %);
 
     let add_assign = add_assign(&tokens);
     let sub_assign = sub_assign(&tokens);
