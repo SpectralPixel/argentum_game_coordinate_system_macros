@@ -1,6 +1,6 @@
 use proc_macro2::{Span, TokenStream};
-use quote::quote;
-use syn::Ident;
+use quote::{quote, ToTokens};
+use syn::{DeriveInput, GenericParam, Ident, WhereClause};
 
 use crate::tokens::Tokens;
 
@@ -24,10 +24,20 @@ macro_rules! gen_op_xyz {
     };
 }
 
-macro_rules! operation_inner {
-    ($tokens:ident, $op:ident, $operation_failure:block) => {
-        (|tokens: &Tokens| -> TokenStream {
-            let (_, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
+macro_rules! get_operation_variables {
+    ($tokens:ident, $op:ident) => {
+        (|tokens: &Tokens| -> (
+            DeriveInput,
+            Ident,
+            TokenStream,
+            TokenStream,
+            Option<WhereClause>,
+            GenericParam,
+            Ident,
+            Ident,
+            Ident,
+        ) {
+            let (ast, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
 
             let op = stringify!($op);
             let lower_op = op.to_lowercase();
@@ -35,6 +45,42 @@ macro_rules! operation_inner {
             let trait_name = Ident::new(op, Span::mixed_site());
             let func_name = Ident::new(&lower_op, Span::mixed_site());
             let op_name = Ident::new(&format!("checked_{}", lower_op), Span::mixed_site());
+
+            // silly workaround for getting rid of the reference within the Option<>
+            let where_clause = match where_clause {
+                Some(v) => Some(v.clone()),
+                None => None,
+            };
+
+            (
+                ast.clone(),
+                name.clone(),
+                impl_generics.to_token_stream(),
+                type_generics.to_token_stream(),
+                where_clause,
+                generic.clone(),
+                trait_name,
+                func_name,
+                op_name,
+            )
+        })(&$tokens)
+    };
+}
+
+macro_rules! operation_inner {
+    ($tokens:ident, $op:ident, $operation_failure:block) => {
+        (|| -> TokenStream {
+            let (
+                _,
+                name,
+                impl_generics,
+                type_generics,
+                where_clause,
+                generic,
+                trait_name,
+                func_name,
+                op_name,
+            ) = get_operation_variables!($tokens, $op);
 
             let op_x = gen_op_xyz!(x, generic, op_name, $operation_failure);
             let op_y = gen_op_xyz!(y, generic, op_name, $operation_failure);
@@ -53,17 +99,21 @@ macro_rules! operation_inner {
                     }
                 }
             }
-        })(&$tokens)
+        })()
     };
     ($tokens:ident, $op:ident, $sym:tt) => {
-        (|tokens: &Tokens| -> TokenStream {
-            let (_, name, impl_generics, type_generics, where_clause, _) = tokens.split();
-
-            let op = stringify!($op);
-            let lower_op = op.to_lowercase();
-
-            let trait_name = Ident::new(op, Span::mixed_site());
-            let func_name = Ident::new(&lower_op, Span::mixed_site());
+        (|| -> TokenStream {
+            let (
+                _,
+                name,
+                impl_generics,
+                type_generics,
+                where_clause,
+                _,
+                trait_name,
+                func_name,
+                _,
+            ) = get_operation_variables!($tokens, $op);
 
             quote! {
                 impl #impl_generics std::ops::#trait_name for #name #type_generics #where_clause {
@@ -74,7 +124,7 @@ macro_rules! operation_inner {
                     }
                 }
             }
-        })(&$tokens)
+        })()
     };
 }
 
