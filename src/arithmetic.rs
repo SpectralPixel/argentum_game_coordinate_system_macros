@@ -39,7 +39,7 @@ macro_rules! gen_op_xyz {
 }
 
 macro_rules! get_operation_variables {
-    ($tokens:ident, $op:ident) => {
+    ($tokens:ident, $op:ident, $impl_for:ident) => {
         (|tokens: &Tokens| -> (
             DeriveInput,
             Ident,
@@ -50,6 +50,7 @@ macro_rules! get_operation_variables {
             Ident,
             Ident,
             Ident,
+            TokenStream,
         ) {
             let (ast, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
 
@@ -66,6 +67,8 @@ macro_rules! get_operation_variables {
                 None => None,
             };
 
+            let impl_for = quote!(<$impl_for>);
+
             (
                 ast.clone(),
                 name.clone(),
@@ -76,15 +79,17 @@ macro_rules! get_operation_variables {
                 trait_name,
                 func_name,
                 op_name,
+                impl_for,
             )
         })(&$tokens)
     };
 }
 
 macro_rules! operation_quote {
-    ($impl_generics:ident, $trait_name:ident, $name:ident, $type_generics:ident, $where_clause:ident, $func_name:ident, $op_x:ident, $op_y:ident, $op_z:ident) => {
+    ($impl_generics:ident, $trait_name:ident, $impl_for:ident, $name:ident, $type_generics:ident, $where_clause:ident, $func_name:ident, $op_x:ident, $op_y:ident, $op_z:ident) => {
         (|impl_generics: TokenStream,
           trait_name: Ident,
+          impl_for: TokenStream,
           name: Ident,
           type_generics: TokenStream,
           where_clause: Option<WhereClause>,
@@ -93,7 +98,7 @@ macro_rules! operation_quote {
           op_y: TokenStream,
           op_z: TokenStream| {
             quote! {
-                impl #impl_generics std::ops::#trait_name for #name #type_generics #where_clause {
+                impl #impl_generics std::ops::#trait_name #impl_for for #name #type_generics #where_clause {
                     type Output = Self;
 
                     fn #func_name(self, rhs: Self) -> Self::Output {
@@ -108,6 +113,7 @@ macro_rules! operation_quote {
         })(
             $impl_generics,
             $trait_name,
+            $impl_for,
             $name,
             $type_generics,
             $where_clause,
@@ -132,7 +138,8 @@ macro_rules! operation_inner {
                 trait_name,
                 func_name,
                 op_name,
-            ) = get_operation_variables!($tokens, $op);
+                impl_for,
+            ) = get_operation_variables!($tokens, $op, Self);
 
             let op_x = gen_op_xyz!(x, generic, op_name, $operation_failure);
             let op_y = gen_op_xyz!(y, generic, op_name, $operation_failure);
@@ -141,6 +148,7 @@ macro_rules! operation_inner {
             operation_quote!(
                 impl_generics,
                 trait_name,
+                impl_for,
                 name,
                 type_generics,
                 where_clause,
@@ -153,8 +161,18 @@ macro_rules! operation_inner {
     };
     ($tokens:ident, $op:ident, $sym:tt) => {
         (|| -> TokenStream {
-            let (_, name, impl_generics, type_generics, where_clause, _, trait_name, func_name, _) =
-                get_operation_variables!($tokens, $op);
+            let (
+                _,
+                name,
+                impl_generics,
+                type_generics,
+                where_clause,
+                _,
+                trait_name,
+                func_name,
+                _,
+                impl_for,
+            ) = get_operation_variables!($tokens, $op, Self);
 
             let op_x = gen_op_xyz!(x, $sym);
             let op_y = gen_op_xyz!(y, $sym);
@@ -163,6 +181,7 @@ macro_rules! operation_inner {
             operation_quote!(
                 impl_generics,
                 trait_name,
+                impl_for,
                 name,
                 type_generics,
                 where_clause,
