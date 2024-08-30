@@ -24,7 +24,7 @@ macro_rules! gen_op_xyz {
     };
 }
 
-macro_rules! operation_inner_xyz {
+macro_rules! operation_inner {
     ($tokens:ident, $op:ident, $operation_failure:block) => {
         (|tokens: &Tokens| -> TokenStream {
             let (_, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
@@ -80,7 +80,7 @@ macro_rules! operation_inner_xyz {
 
 macro_rules! operation_xyz {
     ($tokens:ident, $op:ident, $failed_op:literal) => {
-        operation_inner_xyz!($tokens, $op, {
+        operation_inner!($tokens, $op, {
             || {
                 panic!(
                     "{} is experiencing integer overflow after {} by {}.",
@@ -90,12 +90,12 @@ macro_rules! operation_xyz {
         })
     };
     ($tokens:ident, $op:ident, "divided") => {
-        operation_inner_xyz!($tokens, $op, {
+        operation_inner!($tokens, $op, {
             || panic!("{} cannot be divided by {}.", self, rhs)
         })
     };
     ($tokens:ident, $op:ident, $sym:tt) => {
-        operation_inner_xyz!($tokens, $op, $sym)
+        operation_inner!($tokens, $op, $sym)
     };
 }
 
