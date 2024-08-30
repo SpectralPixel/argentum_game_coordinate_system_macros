@@ -12,6 +12,13 @@ macro_rules! gen_op_single {
             }
         })()
     };
+    ($component:ident, $sym:tt) => {
+        (|| {
+            quote! {
+                self.$component $sym rhs
+            }
+        })()
+    };
 }
 
 macro_rules! gen_op_xyz {
@@ -19,6 +26,13 @@ macro_rules! gen_op_xyz {
         (|| {
             quote! {
                 #$generic::#$op_name(&self.$component, &rhs.$component).unwrap_or_else($operation_failure)
+            }
+        })()
+    };
+    ($component:ident, $sym:tt) => {
+        (|| {
+            quote! {
+                self.$component $sym rhs.$component
             }
         })()
     };
@@ -103,24 +117,23 @@ macro_rules! operation_inner {
     };
     ($tokens:ident, $op:ident, $sym:tt) => {
         (|| -> TokenStream {
-            let (
-                _,
-                name,
-                impl_generics,
-                type_generics,
-                where_clause,
-                _,
-                trait_name,
-                func_name,
-                _,
-            ) = get_operation_variables!($tokens, $op);
+            let (_, name, impl_generics, type_generics, where_clause, _, trait_name, func_name, _) =
+                get_operation_variables!($tokens, $op);
+
+            let op_x = gen_op_xyz!(x, $sym);
+            let op_y = gen_op_xyz!(y, $sym);
+            let op_z = gen_op_xyz!(z, $sym);
 
             quote! {
                 impl #impl_generics std::ops::#trait_name for #name #type_generics #where_clause {
                     type Output = Self;
 
                     fn #func_name(self, rhs: Self) -> Self::Output {
-                        Self::new(self.x $sym rhs.x, self.y $sym rhs.y, self.z $sym rhs.z)
+                        Self::new(
+                            #op_x,
+                            #op_y,
+                            #op_z,
+                        )
                     }
                 }
             }
