@@ -423,17 +423,6 @@ macro_rules! operation_assign_single {
     };
 }
 
-fn rem_assign_single(tokens: &Tokens) -> TokenStream {
-    let (_, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
-    quote! {
-        impl #impl_generics std::ops::RemAssign<#generic> for #name #type_generics #where_clause {
-            fn rem_assign(&mut self, rhs: #generic) {
-                *self = self.to_owned() % rhs;
-            }
-        }
-    }
-}
-
 fn not(tokens: &Tokens) -> TokenStream {
     let (_, name, impl_generics, type_generics, where_clause, _) = tokens.split();
     quote! {
@@ -493,7 +482,7 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
     let bitor_assign = operation_assign_xyz!(tokens, BitOrAssign, |);
     let bitxor_assign = operation_assign_xyz!(tokens, BitXorAssign, ^);
 
-    let rem_assign_single = rem_assign_single(&tokens);
+    let rem_assign_single = operation_assign_single!(tokens, RemAssign, %);
 
     let not = not(&tokens);
     let neg = neg(&tokens);
