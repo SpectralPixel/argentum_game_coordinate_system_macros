@@ -449,7 +449,15 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
     let bitand = operation_xyz!(tokens, BitAnd, &);
     let bitor = operation_xyz!(tokens, BitOr, |);
     let bitxor = operation_xyz!(tokens, BitXor, ^);
+    let rem = operation_xyz!(tokens, Rem, %);
 
+    let add_single = operation_single!(tokens, Add, "added");
+    let sub_single = operation_single!(tokens, Sub, "subtracted");
+    let mul_single = operation_single!(tokens, Mul, "multiplied");
+    let div_single = operation_single!(tokens, Div, "divided");
+    let bitand_single = operation_single!(tokens, BitAnd, &);
+    let bitor_single = operation_single!(tokens, BitOr, |);
+    let bitxor_single = operation_single!(tokens, BitXor, ^);
     let rem_single = operation_single!(tokens, Rem, %);
 
     let add_assign = add_assign(&tokens);
@@ -473,7 +481,15 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
         #bitand
         #bitor
         #bitxor
+        #rem
 
+        #add_single
+        #sub_single
+        #mul_single
+        #div_single
+        #bitand_single
+        #bitor_single
+        #bitxor_single
         #rem_single
 
         #add_assign
