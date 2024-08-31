@@ -1,7 +1,7 @@
+use convert_case::{Case, Casing};
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
 use syn::{DeriveInput, GenericParam, Ident, WhereClause};
-use convert_case::{Case, Casing};
 
 use crate::tokens::Tokens;
 
@@ -56,7 +56,7 @@ macro_rules! get_operation_variables {
 
             let op = stringify!($op);
             let mut lower_op = op.from_case(Case::Pascal).to_case(Case::Snake);
-            
+
             // edge case where BitAnd, BitOr and BitXor get converted to "bit_op" while the method they require is "bitop"
             if lower_op.split('_').next().unwrap() == "bit" {
                 lower_op.remove(3); // removes the underscore
@@ -353,17 +353,8 @@ macro_rules! operation_single {
 macro_rules! operation_assign {
     ($tokens:ident, $op:ident, $sym:tt) => {
         (|| -> TokenStream {
-            let (
-                _,
-                name,
-                impl_generics,
-                type_generics,
-                where_clause,
-                _,
-                trait_name,
-                func_name,
-                _,
-            ) = get_operation_variables!($tokens, $op);
+            let (_, name, impl_generics, type_generics, where_clause, _, trait_name, func_name, _) =
+                get_operation_variables!($tokens, $op);
 
             operation_quote!(
                 impl_generics,
