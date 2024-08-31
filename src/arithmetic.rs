@@ -455,6 +455,17 @@ fn neg(tokens: &Tokens) -> Option<TokenStream> {
     }
 }
 
+// WARNING: BROKEN WINDOW
+// Using `macro_rules!` macros to implement these operations turns the code
+// from a non-DRY nightmare into slightly less WET code. I believe that
+// while this is certainly better than mere trait implementation, a lot could
+// these macros supported branching for certain conditions and edge-cases.
+// Therefore, I propose another proc-macro crate:
+// "`argentum_game_coordinate_system_arithmetic`". By turning these macros into
+// function-like procedural macros, the amount of spaghetti code could be
+// significantly reduced. For now, I will stick to this system of
+// spaghetti-code though; I want to avoid getting burnt-out from working on the
+// same system for too long.
 pub fn generate(tokens: &Tokens) -> TokenStream {
     let add = operation_xyz!(tokens, Add, "added");
     let sub = operation_xyz!(tokens, Sub, "subtracted");
