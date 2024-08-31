@@ -378,83 +378,6 @@ macro_rules! operation_assign {
     };
 }
 
-fn add_assign(tokens: &Tokens) -> TokenStream {
-    let (_, name, impl_generics, type_generics, where_clause, _) = tokens.split();
-    quote! {
-        impl #impl_generics std::ops::AddAssign for #name #type_generics #where_clause {
-            fn add_assign(&mut self, rhs: #name #type_generics) {
-                *self = self.to_owned() + rhs;
-            }
-        }
-    }
-}
-
-fn sub_assign(tokens: &Tokens) -> TokenStream {
-    let (_, name, impl_generics, type_generics, where_clause, _) = tokens.split();
-    quote! {
-        impl #impl_generics std::ops::SubAssign for #name #type_generics #where_clause {
-            fn sub_assign(&mut self, rhs: #name #type_generics) {
-                *self = self.to_owned() - rhs;
-            }
-        }
-    }
-}
-
-fn mul_assign(tokens: &Tokens) -> TokenStream {
-    let (_, name, impl_generics, type_generics, where_clause, _) = tokens.split();
-    quote! {
-        impl #impl_generics std::ops::MulAssign for #name #type_generics #where_clause {
-            fn mul_assign(&mut self, rhs: #name #type_generics) {
-                *self = self.to_owned() * rhs;
-            }
-        }
-    }
-}
-
-fn div_assign(tokens: &Tokens) -> TokenStream {
-    let (_, name, impl_generics, type_generics, where_clause, _) = tokens.split();
-    quote! {
-        impl #impl_generics std::ops::DivAssign for #name #type_generics #where_clause {
-            fn div_assign(&mut self, rhs: #name #type_generics) {
-                *self = self.to_owned() / rhs;
-            }
-        }
-    }
-}
-
-fn bitand_assign(tokens: &Tokens) -> TokenStream {
-    let (_, name, impl_generics, type_generics, where_clause, _) = tokens.split();
-    quote! {
-        impl #impl_generics std::ops::BitAndAssign for #name #type_generics #where_clause {
-            fn bitand_assign(&mut self, rhs: Self) {
-                *self = self.to_owned() & rhs;
-            }
-        }
-    }
-}
-
-fn bitor_assign(tokens: &Tokens) -> TokenStream {
-    let (_, name, impl_generics, type_generics, where_clause, _) = tokens.split();
-    quote! {
-        impl #impl_generics std::ops::BitOrAssign for #name #type_generics #where_clause {
-            fn bitor_assign(&mut self, rhs: Self) {
-                *self = self.to_owned() | rhs;
-            }
-        }
-    }
-}
-
-fn bitxor_assign(tokens: &Tokens) -> TokenStream {
-    let (_, name, impl_generics, type_generics, where_clause, _) = tokens.split();
-    quote! {
-        impl #impl_generics std::ops::BitXorAssign for #name #type_generics #where_clause {
-            fn bitxor_assign(&mut self, rhs: Self) {
-                *self = self.to_owned() ^ rhs;
-            }
-        }
-    }
-}
-
 fn rem_assign_single(tokens: &Tokens) -> TokenStream {
     let (_, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
     quote! {
@@ -517,13 +440,13 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
     let bitxor_single = operation_single!(tokens, BitXor, ^);
     let rem_single = operation_single!(tokens, Rem, %);
 
-    let add_assign = add_assign(&tokens);
-    let sub_assign = sub_assign(&tokens);
-    let mul_assign = mul_assign(&tokens);
-    let div_assign = div_assign(&tokens);
-    let bitand_assign = bitand_assign(&tokens);
-    let bitor_assign = bitor_assign(&tokens);
-    let bitxor_assign = bitxor_assign(&tokens);
+    let add_assign = operation_assign!(tokens, AddAssign, +);
+    let sub_assign = operation_assign!(tokens, SubAssign, -);
+    let mul_assign = operation_assign!(tokens, MulAssign, *);
+    let div_assign = operation_assign!(tokens, DivAssign, /);
+    let bitand_assign = operation_assign!(tokens, BitAndAssign, &);
+    let bitor_assign = operation_assign!(tokens, BitOrAssign, |);
+    let bitxor_assign = operation_assign!(tokens, BitXorAssign, ^);
 
     let rem_assign_single = rem_assign_single(&tokens);
 
