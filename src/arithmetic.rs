@@ -1,6 +1,7 @@
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
 use syn::{DeriveInput, GenericParam, Ident, WhereClause};
+use convert_case::{Case, Casing};
 
 use crate::tokens::Tokens;
 
@@ -54,7 +55,12 @@ macro_rules! get_operation_variables {
             let (ast, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
 
             let op = stringify!($op);
-            let lower_op = op.to_lowercase();
+            let mut lower_op = op.from_case(Case::Pascal).to_case(Case::Snake);
+            
+            // edge case where BitAnd, BitOr and BitXor get converted to "bit_op" while the method they require is "bitop"
+            if lower_op.split('_').next().unwrap() == "bit" {
+                lower_op.remove(3); // removes the underscore
+            }
 
             let trait_name = Ident::new(op, Span::mixed_site());
             let func_name = Ident::new(&lower_op, Span::mixed_site());
