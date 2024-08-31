@@ -160,6 +160,29 @@ macro_rules! operation_quote {
             $op_z,
         )
     };
+    ($impl_generics:ident, $trait_name:ident, $name:ident, $type_generics:ident, $where_clause:ident, $func_name:ident, $sym:tt) => {
+        (|impl_generics: TokenStream,
+          trait_name: Ident,
+          name: Ident,
+          type_generics: TokenStream,
+          where_clause: Option<WhereClause>,
+          func_name: Ident| {
+            quote! {
+                impl #impl_generics std::ops::#trait_name for #name #type_generics #where_clause {
+                    fn #func_name(&mut self, rhs: Self) {
+                        *self = self.to_owned() $sym rhs;
+                    }
+                }
+            }
+        })(
+            $impl_generics,
+            $trait_name,
+            $name,
+            $type_generics,
+            $where_clause,
+            $func_name,
+        )
+    };
 }
 
 macro_rules! operation_inner_xyz {
@@ -324,6 +347,34 @@ macro_rules! operation_single {
     };
     ($tokens:ident, $op:ident, $sym:tt) => {
         operation_inner_single!($tokens, $op, $sym)
+    };
+}
+
+macro_rules! operation_assign {
+    ($tokens:ident, $op:ident, $sym:tt) => {
+        (|| -> TokenStream {
+            let (
+                _,
+                name,
+                impl_generics,
+                type_generics,
+                where_clause,
+                _,
+                trait_name,
+                func_name,
+                _,
+            ) = get_operation_variables!($tokens, $op);
+
+            operation_quote!(
+                impl_generics,
+                trait_name,
+                name,
+                type_generics,
+                where_clause,
+                func_name,
+                $sym
+            )
+        })()
     };
 }
 
