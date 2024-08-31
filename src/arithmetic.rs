@@ -481,7 +481,15 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
     let bitand_assign = operation_assign_xyz!(tokens, BitAndAssign, &);
     let bitor_assign = operation_assign_xyz!(tokens, BitOrAssign, |);
     let bitxor_assign = operation_assign_xyz!(tokens, BitXorAssign, ^);
+    let rem_assign = operation_assign_xyz!(tokens, RemAssign, %);
 
+    let add_assign_single = operation_assign_single!(tokens, AddAssign, +);
+    let sub_assign_single = operation_assign_single!(tokens, SubAssign, -);
+    let mul_assign_single = operation_assign_single!(tokens, MulAssign, *);
+    let div_assign_single = operation_assign_single!(tokens, DivAssign, /);
+    let bitand_assign_single = operation_assign_single!(tokens, BitAndAssign, &);
+    let bitor_assign_single = operation_assign_single!(tokens, BitOrAssign, |);
+    let bitxor_assign_single = operation_assign_single!(tokens, BitXorAssign, ^);
     let rem_assign_single = operation_assign_single!(tokens, RemAssign, %);
 
     let not = not(&tokens);
@@ -513,7 +521,15 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
         #bitand_assign
         #bitor_assign
         #bitxor_assign
+        #rem_assign
 
+        #add_assign_single
+        #sub_assign_single
+        #mul_assign_single
+        #div_assign_single
+        #bitand_assign_single
+        #bitor_assign_single
+        #bitxor_assign_single
         #rem_assign_single
 
         #not
