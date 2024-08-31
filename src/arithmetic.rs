@@ -350,7 +350,7 @@ macro_rules! operation_single {
     };
 }
 
-macro_rules! operation_assign {
+macro_rules! operation_assign_xyz {
     ($tokens:ident, $op:ident, $sym:tt) => {
         (|| -> TokenStream {
             let (_, name, impl_generics, type_generics, where_clause, _, trait_name, func_name, _) =
@@ -431,13 +431,13 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
     let bitxor_single = operation_single!(tokens, BitXor, ^);
     let rem_single = operation_single!(tokens, Rem, %);
 
-    let add_assign = operation_assign!(tokens, AddAssign, +);
-    let sub_assign = operation_assign!(tokens, SubAssign, -);
-    let mul_assign = operation_assign!(tokens, MulAssign, *);
-    let div_assign = operation_assign!(tokens, DivAssign, /);
-    let bitand_assign = operation_assign!(tokens, BitAndAssign, &);
-    let bitor_assign = operation_assign!(tokens, BitOrAssign, |);
-    let bitxor_assign = operation_assign!(tokens, BitXorAssign, ^);
+    let add_assign = operation_assign_xyz!(tokens, AddAssign, +);
+    let sub_assign = operation_assign_xyz!(tokens, SubAssign, -);
+    let mul_assign = operation_assign_xyz!(tokens, MulAssign, *);
+    let div_assign = operation_assign_xyz!(tokens, DivAssign, /);
+    let bitand_assign = operation_assign_xyz!(tokens, BitAndAssign, &);
+    let bitor_assign = operation_assign_xyz!(tokens, BitOrAssign, |);
+    let bitxor_assign = operation_assign_xyz!(tokens, BitXorAssign, ^);
 
     let rem_assign_single = rem_assign_single(&tokens);
 
