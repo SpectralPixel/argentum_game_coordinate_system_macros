@@ -436,25 +436,6 @@ fn not(tokens: &Tokens) -> TokenStream {
     }
 }
 
-fn neg(tokens: &Tokens) -> Option<TokenStream> {
-    let (ast, name, impl_generics, type_generics, where_clause, _) = tokens.split();
-    match ast.attrs.get(0) {
-        Some(attr) => match attr.path().is_ident("signed") {
-            true => Some(quote! {
-                impl #impl_generics std::ops::Neg for #name #type_generics #where_clause {
-                    type Output = Self;
-
-                    fn neg(self) -> Self::Output {
-                        Self::new(-self.x, -self.y, -self.z)
-                    }
-                }
-            }),
-            false => None,
-        },
-        None => None,
-    }
-}
-
 // WARNING: BROKEN WINDOW
 // Using `macro_rules!` macros to implement these operations turns the code
 // from a non-DRY nightmare into slightly less WET code. I believe that
@@ -504,7 +485,6 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
     let rem_assign_single = operation_assign_single!(tokens, RemAssign, %);
 
     let not = not(&tokens);
-    let neg = neg(&tokens);
 
     quote! {
         #add
@@ -544,6 +524,5 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
         #rem_assign_single
 
         #not
-        #neg
     }
 }
