@@ -1,0 +1,5 @@
+struct ArithmeticToken;
+
+impl ArithmeticToken {
+    
+}
