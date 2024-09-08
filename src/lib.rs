@@ -1,7 +1,7 @@
 use tokens::Tokens;
 
 mod arithmetic;
-mod token_trait;
+mod arithmetic_token;
 mod tokens;
 
 // #[proc_macro_derive(CoordinateArithmetic)]
