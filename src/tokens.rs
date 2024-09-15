@@ -8,6 +8,7 @@ impl Tokens {
     pub fn split(
         &self,
     ) -> (
+        &DeriveInput,
         &Ident,
         ImplGenerics,
         TypeGenerics,
@@ -17,6 +18,7 @@ impl Tokens {
         let (impl_generics, type_generics, where_clause) = self.ast.generics.split_for_impl();
 
         (
+            &self.ast,
             &self.ast.ident,
             impl_generics,
             type_generics,

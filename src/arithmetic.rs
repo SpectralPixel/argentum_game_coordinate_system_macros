@@ -1,7 +1,7 @@
 use convert_case::{Case, Casing};
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
-use syn::{GenericParam, Ident, WhereClause};
+use syn::{DeriveInput, GenericParam, Ident, WhereClause};
 
 use crate::tokens::Tokens;
 
@@ -42,6 +42,7 @@ macro_rules! gen_op_xyz {
 macro_rules! get_operation_variables {
     ($tokens:ident, $op:ident) => {
         (|tokens: &Tokens| -> (
+            DeriveInput,
             Ident,
             TokenStream,
             TokenStream,
@@ -51,7 +52,7 @@ macro_rules! get_operation_variables {
             Ident,
             Ident,
         ) {
-            let (name, impl_generics, type_generics, where_clause, generic) = tokens.split();
+            let (ast, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
 
             let op = stringify!($op);
             let mut lower_op = op.from_case(Case::Pascal).to_case(Case::Snake);
@@ -72,6 +73,7 @@ macro_rules! get_operation_variables {
             };
 
             (
+                ast.clone(),
                 name.clone(),
                 impl_generics.to_token_stream(),
                 type_generics.to_token_stream(),
@@ -212,6 +214,7 @@ macro_rules! operation_inner_xyz {
     ($tokens:ident, $op:ident, $operation_failure:block) => {
         (|| -> TokenStream {
             let (
+                _,
                 name,
                 impl_generics,
                 type_generics,
@@ -241,7 +244,7 @@ macro_rules! operation_inner_xyz {
     };
     ($tokens:ident, $op:ident, $sym:tt) => {
         (|| -> TokenStream {
-            let (name, impl_generics, type_generics, where_clause, _, trait_name, func_name, _) =
+            let (_, name, impl_generics, type_generics, where_clause, _, trait_name, func_name, _) =
                 get_operation_variables!($tokens, $op);
 
             let op_x = gen_op_xyz!(x, $sym);
@@ -267,6 +270,7 @@ macro_rules! operation_inner_single {
     ($tokens:ident, $op:ident, $operation_failure:block) => {
         (|| -> TokenStream {
             let (
+                _,
                 name,
                 impl_generics,
                 type_generics,
@@ -298,6 +302,7 @@ macro_rules! operation_inner_single {
     ($tokens:ident, $op:ident, $sym:tt) => {
         (|| -> TokenStream {
             let (
+                _,
                 name,
                 impl_generics,
                 type_generics,
@@ -373,7 +378,7 @@ macro_rules! operation_single {
 macro_rules! operation_assign_xyz {
     ($tokens:ident, $op:ident, $sym:tt) => {
         (|| -> TokenStream {
-            let (name, impl_generics, type_generics, where_clause, _, trait_name, func_name, _) =
+            let (_, name, impl_generics, type_generics, where_clause, _, trait_name, func_name, _) =
                 get_operation_variables!($tokens, $op);
 
             operation_quote!(
@@ -393,6 +398,7 @@ macro_rules! operation_assign_single {
     ($tokens:ident, $op:ident, $sym:tt) => {
         (|| -> TokenStream {
             let (
+                _,
                 name,
                 impl_generics,
                 type_generics,
@@ -418,7 +424,7 @@ macro_rules! operation_assign_single {
 }
 
 fn not(tokens: &Tokens) -> TokenStream {
-    let (name, impl_generics, type_generics, where_clause, _) = tokens.split();
+    let (_, name, impl_generics, type_generics, where_clause, _) = tokens.split();
     quote! {
         impl #impl_generics std::ops::Not for #name #type_generics #where_clause {
             type Output = Self;
