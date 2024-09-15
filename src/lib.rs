@@ -9,8 +9,3 @@ pub fn coordinate_arithmetic_derive(input: proc_macro::TokenStream) -> proc_macr
     let arithmetic = arithmetic::generate(&tokens);
     arithmetic.into()
 }
-
-#[proc_macro]
-pub fn generate_arithmetic_implementation(_: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    proc_macro::TokenStream::new().into()
-}
