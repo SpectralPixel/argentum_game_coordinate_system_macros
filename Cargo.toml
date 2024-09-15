@@ -9,7 +9,6 @@ license = "AGPL-3.0-or-later"
 proc-macro = true
 
 [dependencies]
-bimap = "0.6.3"
 convert_case = "0.6.0"
 proc-macro2 = "1.0.86"
 quote = "1.0.36"
