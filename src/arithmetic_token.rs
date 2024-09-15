@@ -33,3 +33,9 @@ impl ArithmeticToken {
         })
     }
 }
+
+macro_rules! arithmetic_token_wrapper_struct {
+    () => {
+        
+    };
+}
