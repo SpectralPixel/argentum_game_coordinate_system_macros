@@ -532,6 +532,8 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
 }
 
 fn operation(tokens: &Tokens, trait_name: &str) -> TokenStream {
+    let (operation_punct, checked_op) = translator(&trait_name);
+
     let (
         ast,
         name,
@@ -544,6 +546,29 @@ fn operation(tokens: &Tokens, trait_name: &str) -> TokenStream {
         checked_op_name,
     ) = get_operation_variables(&tokens, &trait_name);
     quote! {}
+}
+
+macro_rules! translator {
+    ($name:ident) => {
+        syn::token::$name::default().into_token_stream()
+    };
+}
+
+fn translator(name: &str) -> (proc_macro2::TokenStream, bool) {
+    let op = match name {
+        "Add" => translator!(Plus),
+        "Sub" => translator!(Minus),
+        "Mul" => translator!(Star),
+        "Div" => translator!(Slash),
+        _ => panic!("Incorrect punctuation provided in matcher!"),
+    };
+
+    let is_checked = match name {
+        "Add" | "Sub" | "Mul" | "Div" => true,
+        _ => false,
+    };
+
+    (op, is_checked)
 }
 
 fn get_operation_variables(
