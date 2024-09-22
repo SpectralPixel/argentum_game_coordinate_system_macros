@@ -548,6 +548,12 @@ fn operation(tokens: &Tokens, trait_name: &str) -> TokenStream {
     quote! {}
 }
 
+enum Operation {
+    Checked(Ident, String),
+    Inbetween(TokenStream),
+    Before(TokenStream),
+}
+
 macro_rules! translator {
     ($name:ident) => {
         syn::token::$name::default().into_token_stream()
