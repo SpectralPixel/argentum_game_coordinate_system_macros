@@ -530,3 +530,10 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
         #not
     }
 }
+
+fn operation(tokens: &Tokens, trait_name: &str) -> TokenStream {
+    let (_, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
+    quote! {
+        
+    }
+}
