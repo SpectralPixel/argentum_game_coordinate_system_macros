@@ -532,8 +532,61 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
 }
 
 fn operation(tokens: &Tokens, trait_name: &str) -> TokenStream {
-    let (_, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
+    let (
+        ast,
+        name,
+        impl_generics,
+        type_generics,
+        where_clause,
+        generic,
+        trait_name,
+        func_name,
+        checked_op_name,
+    ) = get_operation_variables(&tokens, &trait_name);
     quote! {
         
     }
+}
+
+fn get_operation_variables(tokens: &Tokens, trait_name: &str) -> (
+    DeriveInput,
+    Ident,
+    TokenStream,
+    TokenStream,
+    Option<WhereClause>,
+    GenericParam,
+    Ident,
+    Ident,
+    Ident,
+) {
+    let (ast, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
+
+    let mut lower_op = trait_name.from_case(Case::Pascal).to_case(Case::Snake);
+
+    // edge case where BitAnd, BitOr and BitXor get converted to "bit_op" while the method they require is "bitop"
+    if lower_op.split('_').next().unwrap() == "bit" {
+        lower_op.remove(3); // removes the underscore
+    }
+
+    let trait_name_ident = Ident::new(trait_name, Span::mixed_site());
+    let func_name = Ident::new(&lower_op, Span::mixed_site());
+    let checked_op_name = Ident::new(&format!("checked_{}", lower_op), Span::mixed_site());
+
+    // silly workaround for getting rid of the reference within the Option<>
+    let where_clause = match where_clause {
+        Some(v) => Some(v.clone()),
+        None => None,
+    };
+
+    (
+        ast.clone(),
+        name.clone(),
+        impl_generics.to_token_stream(),
+        type_generics.to_token_stream(),
+        where_clause,
+        generic.clone(),
+        trait_name_ident,
+        func_name,
+        checked_op_name,
+    )
 }
