@@ -584,7 +584,7 @@ fn translator(name: &str) -> (proc_macro2::TokenStream, bool) {
         _ => false,
     };
 
-    (op, is_checked)
+    (punct_name, is_checked)
 }
 
 fn get_operation_variables(
