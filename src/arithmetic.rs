@@ -543,12 +543,13 @@ fn operation(tokens: &Tokens, trait_name: &str) -> TokenStream {
         func_name,
         checked_op_name,
     ) = get_operation_variables(&tokens, &trait_name);
-    quote! {
-        
-    }
+    quote! {}
 }
 
-fn get_operation_variables(tokens: &Tokens, trait_name: &str) -> (
+fn get_operation_variables(
+    tokens: &Tokens,
+    trait_name: &str,
+) -> (
     DeriveInput,
     Ident,
     TokenStream,
