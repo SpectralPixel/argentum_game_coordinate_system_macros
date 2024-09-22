@@ -578,28 +578,25 @@ macro_rules! translator {
     };
 }
 
-fn translator(name: &str) -> (proc_macro2::TokenStream, bool) {
+fn translator(name: &str) -> (Operation, bool) {
     let punct_name = match name {
-        "Add" => translator!(Plus),
-        "Sub" => translator!(Minus),
-        "Mul" => translator!(Star),
-        "Div" => translator!(Slash),
-        "Rem" => translator!(Percent),
-        "Shl" => translator!(Shl),
-        "Shr" => translator!(Shr),
-        "BitAnd" => translator!(And),
-        "BitOr" => translator!(Or),
-        "BitXor" => translator!(CaretEq),
-        "AddEq" => translator!(PlusEq),
-        "SubEq" => translator!(MinusEq),
-        "MulEq" => translator!(StarEq),
-        "DivEq" => translator!(SlashEq),
-        "RemEq" => translator!(PercentEq),
-        "ShlEq" => translator!(ShlEq),
-        "ShrEq" => translator!(ShrEq),
-        "BitAndEq" => translator!(AndEq),
-        "BitOrEq" => translator!(OrEq),
-        "BitXorEq" => translator!(CaretEq),
+        x @ ("Add" | "Sub" | "Mul" | "Div") => Operation::checked(x),
+        "Rem" => Operation::Inbetween(translator!(Percent)),
+        "Shl" => Operation::Inbetween(translator!(Shl)),
+        "Shr" => Operation::Inbetween(translator!(Shr)),
+        "BitAnd" => Operation::Inbetween(translator!(And)),
+        "BitOr" => Operation::Inbetween(translator!(Or)),
+        "BitXor" => Operation::Inbetween(translator!(CaretEq)),
+        "AddAssign" => Operation::Assign(translator!(Plus)),
+        "SubAssign" => Operation::Assign(translator!(Minus)),
+        "MulAssign" => Operation::Assign(translator!(Star)),
+        "DivAssign" => Operation::Assign(translator!(Slash)),
+        "RemAssign" => Operation::Assign(translator!(Percent)),
+        "ShlAssign" => Operation::Assign(translator!(Shl)),
+        "ShrAssign" => Operation::Assign(translator!(Shr)),
+        "BitAndAssign" => Operation::Assign(translator!(And)),
+        "BitOrAssign" => Operation::Assign(translator!(Or)),
+        "BitXorAssign" => Operation::Assign(translator!(Caret)),
         _ => panic!("Incorrect punctuation provided in matcher!"),
     };
 
