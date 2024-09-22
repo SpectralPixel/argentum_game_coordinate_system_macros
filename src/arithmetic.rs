@@ -560,6 +560,12 @@ fn translator(name: &str) -> (proc_macro2::TokenStream, bool) {
         "Sub" => translator!(Minus),
         "Mul" => translator!(Star),
         "Div" => translator!(Slash),
+        "Rem" => translator!(Percent),
+        "Shl" => translator!(Shl),
+        "Shr" => translator!(Shr),
+        "BitAnd" => translator!(And),
+        "BitOr" => translator!(Or),
+        "BitXor" => translator!(Caret),
         _ => panic!("Incorrect punctuation provided in matcher!"),
     };
 
