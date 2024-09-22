@@ -555,7 +555,7 @@ macro_rules! translator {
 }
 
 fn translator(name: &str) -> (proc_macro2::TokenStream, bool) {
-    let op = match name {
+    let punct_name = match name {
         "Add" => translator!(Plus),
         "Sub" => translator!(Minus),
         "Mul" => translator!(Star),
@@ -565,7 +565,17 @@ fn translator(name: &str) -> (proc_macro2::TokenStream, bool) {
         "Shr" => translator!(Shr),
         "BitAnd" => translator!(And),
         "BitOr" => translator!(Or),
-        "BitXor" => translator!(Caret),
+        "BitXor" => translator!(CaretEq),
+        "AddEq" => translator!(PlusEq),
+        "SubEq" => translator!(MinusEq),
+        "MulEq" => translator!(StarEq),
+        "DivEq" => translator!(SlashEq),
+        "RemEq" => translator!(PercentEq),
+        "ShlEq" => translator!(ShlEq),
+        "ShrEq" => translator!(ShrEq),
+        "BitAndEq" => translator!(AndEq),
+        "BitOrEq" => translator!(OrEq),
+        "BitXorEq" => translator!(CaretEq),
         _ => panic!("Incorrect punctuation provided in matcher!"),
     };
 
