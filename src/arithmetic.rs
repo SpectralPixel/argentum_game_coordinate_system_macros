@@ -549,9 +549,26 @@ fn operation(tokens: &Tokens, trait_name: &str) -> TokenStream {
 }
 
 enum Operation {
-    Checked(Ident, String),
+    Checked(Ident, &'static str),
     Inbetween(TokenStream),
     Before(TokenStream),
+}
+
+impl Operation {
+    pub fn checked(trait_name: &str) -> Self {
+        let checked_op_name = String::from("checked_") + &trait_name.to_ascii_lowercase();
+        let checked_op = Ident::new(&checked_op_name, Span::mixed_site());
+        
+        let error_message_fragment = match trait_name {
+            "Add" => "added",
+            "Sub" => "subtracted",
+            "Mul" => "multiplied",
+            "Div" => "divided",
+            _ => unreachable!(),
+        };
+
+        Self::Checked(checked_op, error_message_fragment)
+    }
 }
 
 macro_rules! translator {
