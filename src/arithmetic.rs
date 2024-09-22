@@ -552,6 +552,7 @@ enum Operation {
     Checked(Ident, &'static str),
     Inbetween(TokenStream),
     Before(TokenStream),
+    Assign(TokenStream),
 }
 
 impl Operation {
