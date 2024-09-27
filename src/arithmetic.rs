@@ -551,13 +551,23 @@ fn operation(tokens: &Tokens, trait_name: &str) -> TokenStream {
         operation_punct.gen_op(None, &is_checked, &generic)
     } else {
         quote! {
-            operation_punct.gen_op(Some(quote!(x)), &is_checked, &generic)
-            operation_punct.gen_op(Some(quote!(y)), &is_checked, &generic)
-            operation_punct.gen_op(Some(quote!(z)), &is_checked, &generic)
+            Self::new(
+                operation_punct.gen_op(Some(quote!(x)), &is_checked, &generic),
+                operation_punct.gen_op(Some(quote!(y)), &is_checked, &generic),
+                operation_punct.gen_op(Some(quote!(z)), &is_checked, &generic),
+            )
         }
     };
 
-    quote! {}
+    quote! {
+        impl #impl_generics std::ops::#trait_name<#generic> for #name #type_generics #where_clause {
+            type Output = Self;
+
+            fn #func_name(self, rhs: #generic) -> Self::Output {
+                #op_combined
+            }
+        }
+    }
 }
 
 enum Operation {
