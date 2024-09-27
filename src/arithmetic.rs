@@ -532,7 +532,7 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
 }
 
 fn operation(tokens: &Tokens, trait_name: &str) -> TokenStream {
-    let (operation_punct, checked_op) = translator(&trait_name);
+    let (operation_punct, is_checked) = translator(&trait_name);
 
     let (
         ast,
@@ -545,6 +545,18 @@ fn operation(tokens: &Tokens, trait_name: &str) -> TokenStream {
         func_name,
         checked_op_name,
     ) = get_operation_variables(&tokens, &trait_name);
+
+    let op_combined = if let Operation::Assign(_) = operation_punct {
+        // if operation is an "Assign", only one operation will be generated as dimensions are irrelevant.
+        operation_punct.gen_op(None, &is_checked, &generic)
+    } else {
+        quote! {
+            operation_punct.gen_op(Some(quote!(x)), &is_checked, &generic)
+            operation_punct.gen_op(Some(quote!(y)), &is_checked, &generic)
+            operation_punct.gen_op(Some(quote!(z)), &is_checked, &generic)
+        }
+    };
+
     quote! {}
 }
 
