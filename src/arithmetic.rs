@@ -570,6 +570,31 @@ impl Operation {
 
         Self::Checked(checked_op, error_message_fragment)
     }
+
+    pub fn gen_op(&self, dimension: Option<TokenStream>, is_single: &bool, generic: &GenericParam) -> TokenStream {
+        let rhs = if *is_single { None } else { Some(quote!(rhs.#dimension)) };
+
+        match self {
+            Self::Checked(func, error_message_fragment) => {
+                let operation_failure = quote! {
+                    || { panic!("{} cannot be {} by {}! This may be caused by integer overflow.", self, #error_message_fragment, rhs) }
+                };
+
+                quote! {
+                    #generic::#func(&self.dimension, &#rhs).unwrap_or_else(#operation_failure)
+                }
+            },
+            Self::Inbetween(punct) => quote! {
+                self.#dimension #punct #rhs
+            },
+            Self::Before(punct) => quote! {
+                #punct self.dimension
+            },
+            Self::Assign(punct) => quote! {
+                *self = self.to_owned() #punct rhs;
+            },
+        }
+    }
 }
 
 macro_rules! translator {
