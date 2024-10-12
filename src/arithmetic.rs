@@ -586,6 +586,11 @@ impl Operation {
         is_single: &bool,
         generic: &GenericParam,
     ) -> TokenStream {
+        // `*Assign` traits should never be generated with is_single == false
+        if let Self::Assign(_) = self.clone() {
+            assert!(is_single);
+        }
+
         let rhs = if *is_single {
             None
         } else {
