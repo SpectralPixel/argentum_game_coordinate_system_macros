@@ -92,9 +92,11 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
 
     let (name, impl_generics, type_generics, where_clause, generic) = tokens.split();
 
-    let generic = match is_single {
-        true => quote!(#generic),
-        false => quote!(Self),
+    let punct_before_op = matches!(operation_punct, Operation::Before(_));
+    let generic = if is_single || punct_before_op {
+        quote!(<#generic>)
+    } else {
+        quote!(Self)
     };
 
     let mut lower_op = trait_name.from_case(Case::Pascal).to_case(Case::Snake);
@@ -133,7 +135,7 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
     let output_type = operation_punct.output_type();
 
     quote! {
-        impl #impl_generics std::ops::#trait_name_ident<#generic> for #name #type_generics #where_clause {
+        impl #impl_generics std::ops::#trait_name_ident #generic for #name #type_generics #where_clause {
             #output_type
 
             fn #func_name(self, rhs: #generic) -> Self::Output {
