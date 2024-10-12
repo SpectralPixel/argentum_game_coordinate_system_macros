@@ -525,7 +525,9 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
     }
 }
 
-fn operation(tokens: &Tokens, trait_name: &str, is_single: bool) -> TokenStream {
+fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> TokenStream {
+    let is_single = is_single.unwrap_or(false);
+
     let operation_punct = translator(&trait_name);
 
     let (name, impl_generics, type_generics, where_clause, generic, trait_name, func_name) =
