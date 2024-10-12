@@ -207,21 +207,21 @@ impl Operation {
     
     pub fn output_type(&self) -> Option<TokenStream> {
         match self {
-            Operation::Assign(_) => None,
+            Self::Assign(_) => None,
             _ => Some(quote!(type Output = Self;))
         }
     }
     
     pub fn return_type(&self) -> Option<TokenStream> {
         match self {
-            Operation::Assign(_) => None,
+            Self::Assign(_) => None,
             _ => Some(quote!(-> Self::Output)),
         }
     }
 
     pub fn function_arguments(&self, generic: &GenericParam) -> TokenStream {
         match self {
-            Operation::Before(_) => quote!(&self),
+            Self::Before(_) => quote!(&self),
             _ => quote!(&self, rhs: #generic),
         }
     }
@@ -234,25 +234,26 @@ macro_rules! translator {
 }
 
 fn translator(name: &str) -> Operation {
+    use Operation::*;
     match name {
         x @ ("Add" | "Sub" | "Mul" | "Div") => Operation::checked(x),
-        "Rem" => Operation::Inbetween(translator!(Percent)),
-        "Shl" => Operation::Inbetween(translator!(Shl)),
-        "Shr" => Operation::Inbetween(translator!(Shr)),
-        "BitAnd" => Operation::Inbetween(translator!(And)),
-        "BitOr" => Operation::Inbetween(translator!(Or)),
-        "BitXor" => Operation::Inbetween(translator!(CaretEq)),
-        "AddAssign" => Operation::Assign(translator!(Plus)),
-        "SubAssign" => Operation::Assign(translator!(Minus)),
-        "MulAssign" => Operation::Assign(translator!(Star)),
-        "DivAssign" => Operation::Assign(translator!(Slash)),
-        "RemAssign" => Operation::Assign(translator!(Percent)),
-        "ShlAssign" => Operation::Assign(translator!(Shl)),
-        "ShrAssign" => Operation::Assign(translator!(Shr)),
-        "BitAndAssign" => Operation::Assign(translator!(And)),
-        "BitOrAssign" => Operation::Assign(translator!(Or)),
-        "BitXorAssign" => Operation::Assign(translator!(Caret)),
-        "Not" => Operation::Before(translator!(Not)),
+        "Rem" => Inbetween(translator!(Percent)),
+        "Shl" => Inbetween(translator!(Shl)),
+        "Shr" => Inbetween(translator!(Shr)),
+        "BitAnd" => Inbetween(translator!(And)),
+        "BitOr" => Inbetween(translator!(Or)),
+        "BitXor" => Inbetween(translator!(CaretEq)),
+        "AddAssign" => Assign(translator!(Plus)),
+        "SubAssign" => Assign(translator!(Minus)),
+        "MulAssign" => Assign(translator!(Star)),
+        "DivAssign" => Assign(translator!(Slash)),
+        "RemAssign" => Assign(translator!(Percent)),
+        "ShlAssign" => Assign(translator!(Shl)),
+        "ShrAssign" => Assign(translator!(Shr)),
+        "BitAndAssign" => Assign(translator!(And)),
+        "BitOrAssign" => Assign(translator!(Or)),
+        "BitXorAssign" => Assign(translator!(Caret)),
+        "Not" => Before(translator!(Not)),
         _ => panic!("Incorrect punctuation provided in matcher!"),
     }
 }
