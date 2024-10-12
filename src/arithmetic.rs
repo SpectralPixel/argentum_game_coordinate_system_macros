@@ -528,15 +528,8 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
 fn operation(tokens: &Tokens, trait_name: &str) -> TokenStream {
     let (operation_punct, is_checked) = translator(&trait_name);
 
-    let (
-        name,
-        impl_generics,
-        type_generics,
-        where_clause,
-        generic,
-        trait_name,
-        func_name,
-    ) = get_operation_variables(&tokens, &trait_name);
+    let (name, impl_generics, type_generics, where_clause, generic, trait_name, func_name) =
+        get_operation_variables(&tokens, &trait_name);
 
     let op_combined = if let Operation::Assign(_) = operation_punct {
         // if operation is an "Assign", only one operation will be generated as dimensions are irrelevant.
@@ -573,7 +566,7 @@ impl Operation {
     pub fn checked(trait_name: &str) -> Self {
         let checked_op_name = String::from("checked_") + &trait_name.to_ascii_lowercase();
         let checked_op = Ident::new(&checked_op_name, Span::mixed_site());
-        
+
         let error_message_fragment = match trait_name {
             "Add" => "added",
             "Sub" => "subtracted",
@@ -585,8 +578,17 @@ impl Operation {
         Self::Checked(checked_op, error_message_fragment)
     }
 
-    pub fn gen_op(&self, dimension: Option<TokenStream>, is_single: &bool, generic: &GenericParam) -> TokenStream {
-        let rhs = if *is_single { None } else { Some(quote!(rhs.#dimension)) };
+    pub fn gen_op(
+        &self,
+        dimension: Option<TokenStream>,
+        is_single: &bool,
+        generic: &GenericParam,
+    ) -> TokenStream {
+        let rhs = if *is_single {
+            None
+        } else {
+            Some(quote!(rhs.#dimension))
+        };
 
         match self {
             Self::Checked(func, error_message_fragment) => {
@@ -597,7 +599,7 @@ impl Operation {
                 quote! {
                     #generic::#func(&self.dimension, &#rhs).unwrap_or_else(#operation_failure)
                 }
-            },
+            }
             Self::Inbetween(punct) => quote! {
                 self.#dimension #punct #rhs
             },
