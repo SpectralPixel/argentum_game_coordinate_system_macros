@@ -242,7 +242,7 @@ fn translator(name: &str) -> Operation {
         "Shr" => Inbetween(translator!(Shr)),
         "BitAnd" => Inbetween(translator!(And)),
         "BitOr" => Inbetween(translator!(Or)),
-        "BitXor" => Inbetween(translator!(CaretEq)),
+        "BitXor" => Inbetween(translator!(Caret)),
         "AddAssign" => Assign(translator!(Plus)),
         "SubAssign" => Assign(translator!(Minus)),
         "MulAssign" => Assign(translator!(Star)),
