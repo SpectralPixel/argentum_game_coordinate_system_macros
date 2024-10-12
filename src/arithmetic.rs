@@ -215,7 +215,7 @@ impl Operation {
     pub fn function_arguments(&self, generic: &GenericParam, is_single: bool) -> TokenStream {
         let first_argument = match self {
             Self::Assign(_) => quote!(&mut self),
-            _ => quote!(&self),
+            _ => quote!(self),
         };
         let second_argument = match self {
             Self::Checked(_, _) | Self::Inbetween(_) => match is_single {
