@@ -446,43 +446,43 @@ same system for too long. Also, I have no idea how to use a TokenStream without
 the help of syn::DeriveInput, which is not availible for function-like macros.
  */
 pub fn generate(tokens: &Tokens) -> TokenStream {
-    let add = operation_xyz!(tokens, Add, "added");
-    let sub = operation_xyz!(tokens, Sub, "subtracted");
-    let mul = operation_xyz!(tokens, Mul, "multiplied");
-    let div = operation_xyz!(tokens, Div, "divided");
-    let bitand = operation_xyz!(tokens, BitAnd, &);
-    let bitor = operation_xyz!(tokens, BitOr, |);
-    let bitxor = operation_xyz!(tokens, BitXor, ^);
-    let rem = operation_xyz!(tokens, Rem, %);
+    let add = operation(&tokens, "Add",  Some(false));
+    let sub = operation(&tokens, "Sub",  Some(false));
+    let mul = operation(&tokens, "Mul",  Some(false));
+    let div = operation(&tokens, "Div",  Some(false));
+    let bitand = operation(&tokens, "BitAnd",  Some(false));
+    let bitor = operation(&tokens, "BitOr",  Some(false));
+    let bitxor = operation(&tokens, "BitXor",  Some(false));
+    let rem = operation(&tokens, "Rem",  Some(false));
 
-    let add_single = operation_single!(tokens, Add, "added");
-    let sub_single = operation_single!(tokens, Sub, "subtracted");
-    let mul_single = operation_single!(tokens, Mul, "multiplied");
-    let div_single = operation_single!(tokens, Div, "divided");
-    let bitand_single = operation_single!(tokens, BitAnd, &);
-    let bitor_single = operation_single!(tokens, BitOr, |);
-    let bitxor_single = operation_single!(tokens, BitXor, ^);
-    let rem_single = operation_single!(tokens, Rem, %);
+    let add_single = operation(&tokens, "Add",  Some(true));
+    let sub_single = operation(&tokens, "Sub",  Some(true));
+    let mul_single = operation(&tokens, "Mul",  Some(true));
+    let div_single = operation(&tokens, "Div",  Some(true));
+    let bitand_single = operation(&tokens, "BitAnd",  Some(true));
+    let bitor_single = operation(&tokens, "BitOr",  Some(true));
+    let bitxor_single = operation(&tokens, "BitXor",  Some(true));
+    let rem_single = operation(&tokens, "Rem",  Some(true));
 
-    let add_assign = operation_assign_xyz!(tokens, AddAssign, +);
-    let sub_assign = operation_assign_xyz!(tokens, SubAssign, -);
-    let mul_assign = operation_assign_xyz!(tokens, MulAssign, *);
-    let div_assign = operation_assign_xyz!(tokens, DivAssign, /);
-    let bitand_assign = operation_assign_xyz!(tokens, BitAndAssign, &);
-    let bitor_assign = operation_assign_xyz!(tokens, BitOrAssign, |);
-    let bitxor_assign = operation_assign_xyz!(tokens, BitXorAssign, ^);
-    let rem_assign = operation_assign_xyz!(tokens, RemAssign, %);
+    let add_assign = operation(&tokens, "AddAssign", None);
+    let sub_assign = operation(&tokens, "SubAssign", None);
+    let mul_assign = operation(&tokens, "MulAssign", None);
+    let div_assign = operation(&tokens, "DivAssign", None);
+    let bitand_assign = operation(&tokens, "BitAndAssign", None);
+    let bitor_assign = operation(&tokens, "BitOrAssign", None);
+    let bitxor_assign = operation(&tokens, "BitXorAssign", None);
+    let rem_assign = operation(&tokens, "RemAssign", None);
 
-    let add_assign_single = operation_assign_single!(tokens, AddAssign, +);
-    let sub_assign_single = operation_assign_single!(tokens, SubAssign, -);
-    let mul_assign_single = operation_assign_single!(tokens, MulAssign, *);
-    let div_assign_single = operation_assign_single!(tokens, DivAssign, /);
-    let bitand_assign_single = operation_assign_single!(tokens, BitAndAssign, &);
-    let bitor_assign_single = operation_assign_single!(tokens, BitOrAssign, |);
-    let bitxor_assign_single = operation_assign_single!(tokens, BitXorAssign, ^);
-    let rem_assign_single = operation_assign_single!(tokens, RemAssign, %);
+    let add_assign_single = operation(&tokens, "AddAssign", None);
+    let sub_assign_single = operation(&tokens, "SubAssign", None);
+    let mul_assign_single = operation(&tokens, "MulAssign", None);
+    let div_assign_single = operation(&tokens, "DivAssign", None);
+    let bitand_assign_single = operation(&tokens, "BitAndAssign", None);
+    let bitor_assign_single = operation(&tokens, "BitOrAssign", None);
+    let bitxor_assign_single = operation(&tokens, "BitXorAssign", None);
+    let rem_assign_single = operation(&tokens, "RemAssign", None);
 
-    let not = not(&tokens);
+    let not = operation(&tokens, "Not", Some(false));
 
     quote! {
         #add
