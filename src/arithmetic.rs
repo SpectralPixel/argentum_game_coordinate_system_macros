@@ -108,10 +108,6 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
         None => None,
     };
 
-    let name = name.clone();
-    let impl_generics = impl_generics.to_token_stream();
-    let type_generics = type_generics.to_token_stream();
-
     let op_combined = if let Operation::Assign(_) = operation_punct {
         // if operation is an "Assign", only one operation will be generated as dimensions are irrelevant.
         operation_punct.gen_op(None, &is_single, &generic)
@@ -129,10 +125,12 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
     };
 
     let output_type = operation_punct.output_type();
-
+    let return_type = operation_punct.return_type();
     let arguments = operation_punct.function_arguments(&generic);
 
-    let return_type = operation_punct.return_type();
+    let name = name.clone();
+    let impl_generics = impl_generics.to_token_stream();
+    let type_generics = type_generics.to_token_stream();
 
     quote! {
         impl #impl_generics std::ops::#trait_name_ident #trait_generic for #name #type_generics #where_clause {
