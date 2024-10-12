@@ -115,7 +115,7 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
     };
 
     let punct_before_op = matches!(operation_punct, Operation::Before(_));
-    let trait_generic = match is_single | !punct_before_op {
+    let trait_generic = match is_single & !punct_before_op {
         true => Some(quote!(<#generic>)),
         false => None,
     };
