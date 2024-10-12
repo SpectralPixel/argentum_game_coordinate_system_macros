@@ -1,7 +1,7 @@
 use convert_case::{Case, Casing};
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
-use syn::{GenericParam, Ident, WhereClause};
+use syn::{Ident, WhereClause};
 
 use crate::tokens::Tokens;
 
@@ -91,7 +91,7 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
     let operation_punct = translator(&trait_name);
 
     let (name, impl_generics, type_generics, where_clause, generic, trait_name, func_name) =
-        get_operation_variables(&tokens, &trait_name);
+        get_operation_variables(&tokens, &trait_name, is_single);
 
     let op_combined = if let Operation::Assign(_) = operation_punct {
         // if operation is an "Assign", only one operation will be generated as dimensions are irrelevant.
@@ -146,7 +146,7 @@ impl Operation {
         &self,
         dimension: Option<TokenStream>,
         is_single: &bool,
-        generic: &GenericParam,
+        generic: &TokenStream,
     ) -> TokenStream {
         // `*Assign` traits should never be generated with is_single == false
         if let Self::Assign(_) = self {
@@ -222,16 +222,22 @@ fn translator(name: &str) -> Operation {
 fn get_operation_variables(
     tokens: &Tokens,
     trait_name: &str,
+    is_single: bool,
 ) -> (
     Ident,
     TokenStream,
     TokenStream,
     Option<WhereClause>,
-    GenericParam,
+    TokenStream,
     Ident,
     Ident,
 ) {
     let (name, impl_generics, type_generics, where_clause, generic) = tokens.split();
+
+    let generic = match is_single {
+        true => quote!(#generic),
+        false => quote!(Self),
+    };
 
     let mut lower_op = trait_name.from_case(Case::Pascal).to_case(Case::Snake);
 
