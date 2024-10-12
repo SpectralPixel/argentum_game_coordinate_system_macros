@@ -106,11 +106,11 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
 
     let op_combined = if let Operation::Assign(_) = operation_punct {
         // if operation is an "Assign", only one operation will be generated as dimensions are irrelevant.
-        operation_punct.gen_op(None, &is_single, &generic)
+        operation_punct.gen_op(None, is_single, &generic)
     } else {
-        let op_x = operation_punct.gen_op(Some(quote!(x)), &is_single, &generic);
-        let op_y = operation_punct.gen_op(Some(quote!(y)), &is_single, &generic);
-        let op_z = operation_punct.gen_op(Some(quote!(z)), &is_single, &generic);
+        let op_x = operation_punct.gen_op(Some(quote!(x)), is_single, &generic);
+        let op_y = operation_punct.gen_op(Some(quote!(y)), is_single, &generic);
+        let op_z = operation_punct.gen_op(Some(quote!(z)), is_single, &generic);
         quote!(Self::new(#op_x, #op_y, #op_z))
     };
 
@@ -165,7 +165,7 @@ impl Operation {
     pub fn gen_op(
         &self,
         dimension: Option<TokenStream>,
-        is_single: &bool,
+        is_single: bool,
         generic: &GenericParam,
     ) -> TokenStream {
         // `*Assign` traits should never be generated with is_single == false
@@ -173,7 +173,7 @@ impl Operation {
             assert!(is_single);
         }
 
-        let rhs = if *is_single {
+        let rhs = if is_single {
             None
         } else {
             Some(quote!(rhs.#dimension))
