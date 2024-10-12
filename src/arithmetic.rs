@@ -178,7 +178,7 @@ impl Operation {
                 };
 
                 quote! {
-                    #generic::#func(&self.dimension, &#rhs).unwrap_or_else(#operation_failure)
+                    #generic::#func(&self.#dimension, &#rhs).unwrap_or_else(#operation_failure)
                 }
             }
             Self::Inbetween(punct) => quote! {
