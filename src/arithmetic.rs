@@ -208,12 +208,20 @@ impl Operation {
     }
 
     pub fn function_arguments(&self, generic: &GenericParam, is_single: bool) -> TokenStream {
-        match self {
-            Self::Before(_) => quote!(&self),
-            _ => match is_single {
-                true => quote!(&self, rhs: #generic),
-                false => quote!(&self, rhs: Self)
+        let first_argument = match self {
+            Self::Assign(_) => quote!(&mut self),
+            _ => quote!(&self),
+        };
+        let second_argument = match self {
+            Self::Checked(_, _) | Self::Inbetween(_) => match is_single {
+                true => Some(quote!(rhs: #generic)),
+                false => Some(quote!(rhs: Self)),
             },
+            _ => None,
+        };
+        match second_argument {
+            None => quote!(#first_argument),
+            Some(sec_arg) => quote!(#first_argument, #sec_arg),
         }
     }
 }
