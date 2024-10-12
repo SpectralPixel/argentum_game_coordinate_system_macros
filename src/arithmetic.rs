@@ -186,7 +186,7 @@ impl Operation {
                 self.#dimension #punct #rhs
             },
             Self::Before(punct) => quote! {
-                #punct self.dimension
+                #punct self.#dimension
             },
             Self::Assign(punct) => quote! {
                 *self = self.to_owned() #punct #rhs;
