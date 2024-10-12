@@ -166,7 +166,8 @@ impl Operation {
         &self,
         dimension: Option<TokenStream>,
         generic: &GenericParam,
-    ) -> TokenStream {let rhs = match &dimension {
+    ) -> TokenStream {
+        let rhs = match &dimension {
             Some(v) => quote!(rhs.#v),
             None => quote!(rhs),
         };
@@ -188,7 +189,7 @@ impl Operation {
                 #punct self.dimension
             },
             Self::Assign(punct) => quote! {
-                *self = self.to_owned() #punct rhs;
+                *self = self.to_owned() #punct #rhs;
             },
         }
     }
