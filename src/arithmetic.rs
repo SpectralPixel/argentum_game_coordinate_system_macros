@@ -122,7 +122,7 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
 
     let output_type = operation_punct.output_type();
     let return_type = operation_punct.return_type();
-    let arguments = operation_punct.function_arguments(&generic);
+    let arguments = operation_punct.function_arguments(&generic, is_single);
 
     let name = name.clone();
     let impl_generics = impl_generics.to_token_stream();
@@ -215,10 +215,13 @@ impl Operation {
         }
     }
 
-    pub fn function_arguments(&self, generic: &GenericParam) -> TokenStream {
+    pub fn function_arguments(&self, generic: &GenericParam, is_single: bool) -> TokenStream {
         match self {
             Self::Before(_) => quote!(&self),
-            _ => quote!(&self, rhs: #generic),
+            _ => match is_single {
+                true => quote!(&self, rhs: #generic),
+                false => quote!(&self, rhs: Self)
+            },
         }
     }
 }
