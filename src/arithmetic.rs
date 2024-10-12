@@ -537,9 +537,9 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: bool) -> TokenStream 
     } else {
         quote! {
             Self::new(
-                operation_punct.gen_op(Some(quote!(x)), &is_checked, &generic),
-                operation_punct.gen_op(Some(quote!(y)), &is_checked, &generic),
-                operation_punct.gen_op(Some(quote!(z)), &is_checked, &generic),
+                operation_punct.gen_op(Some(quote!(x)), &is_single, &generic),
+                operation_punct.gen_op(Some(quote!(y)), &is_single, &generic),
+                operation_punct.gen_op(Some(quote!(z)), &is_single, &generic),
             )
         }
     };
