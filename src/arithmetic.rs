@@ -116,13 +116,10 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
         // if operation is an "Assign", only one operation will be generated as dimensions are irrelevant.
         operation_punct.gen_op(None, &is_single, &generic)
     } else {
-        quote! {
-            Self::new(
-                operation_punct.gen_op(Some(quote!(x)), &is_single, &generic),
-                operation_punct.gen_op(Some(quote!(y)), &is_single, &generic),
-                operation_punct.gen_op(Some(quote!(z)), &is_single, &generic),
-            )
-        }
+        let op_x = operation_punct.gen_op(Some(quote!(x)), &is_single, &generic);
+        let op_y = operation_punct.gen_op(Some(quote!(y)), &is_single, &generic);
+        let op_z = operation_punct.gen_op(Some(quote!(z)), &is_single, &generic);
+        quote!(Self::new(#op_x, #op_y, #op_z))
     };
 
     let punct_before_op = matches!(operation_punct, Operation::Before(_));
