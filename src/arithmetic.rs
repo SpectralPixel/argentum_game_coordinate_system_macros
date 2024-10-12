@@ -640,6 +640,7 @@ fn translator(name: &str) -> Operation {
         "BitAndAssign" => Operation::Assign(translator!(And)),
         "BitOrAssign" => Operation::Assign(translator!(Or)),
         "BitXorAssign" => Operation::Assign(translator!(Caret)),
+        "Not" => Operation::Before(translator!(Not)),
         _ => panic!("Incorrect punctuation provided in matcher!"),
     }
 }
