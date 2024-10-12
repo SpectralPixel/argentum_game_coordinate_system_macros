@@ -620,7 +620,7 @@ macro_rules! translator {
 }
 
 fn translator(name: &str) -> Operation {
-    let punct_name = match name {
+    match name {
         x @ ("Add" | "Sub" | "Mul" | "Div") => Operation::checked(x),
         "Rem" => Operation::Inbetween(translator!(Percent)),
         "Shl" => Operation::Inbetween(translator!(Shl)),
@@ -639,9 +639,7 @@ fn translator(name: &str) -> Operation {
         "BitOrAssign" => Operation::Assign(translator!(Or)),
         "BitXorAssign" => Operation::Assign(translator!(Caret)),
         _ => panic!("Incorrect punctuation provided in matcher!"),
-    };
-
-    punct_name
+    }
 }
 
 fn get_operation_variables(
