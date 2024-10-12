@@ -214,10 +214,10 @@ impl Operation {
         }
     }
     
-    pub fn return_type(&self) -> TokenStream {
+    pub fn return_type(&self) -> Option<TokenStream> {
         match self {
-            Operation::Assign(_) => TokenStream::new(),
-            _ => quote!(-> Self::Output),
+            Operation::Assign(_) => None,
+            _ => Some(quote!(-> Self::Output)),
         }
     }
 
