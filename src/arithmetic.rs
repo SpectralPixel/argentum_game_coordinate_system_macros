@@ -526,7 +526,8 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
 }
 
 fn operation(tokens: &Tokens, trait_name: &str) -> TokenStream {
-    let (operation_punct, is_checked) = translator(&trait_name);
+    let operation_punct = translator(&trait_name);
+    let is_checked = matches!(operation_punct, Operation::Checked(_, _));
 
     let (name, impl_generics, type_generics, where_clause, generic, trait_name, func_name) =
         get_operation_variables(&tokens, &trait_name);
@@ -619,7 +620,7 @@ macro_rules! translator {
     };
 }
 
-fn translator(name: &str) -> (Operation, bool) {
+fn translator(name: &str) -> Operation {
     let punct_name = match name {
         x @ ("Add" | "Sub" | "Mul" | "Div") => Operation::checked(x),
         "Rem" => Operation::Inbetween(translator!(Percent)),
@@ -641,12 +642,7 @@ fn translator(name: &str) -> (Operation, bool) {
         _ => panic!("Incorrect punctuation provided in matcher!"),
     };
 
-    let is_checked = match name {
-        "Add" | "Sub" | "Mul" | "Div" => true,
-        _ => false,
-    };
-
-    (punct_name, is_checked)
+    punct_name
 }
 
 fn get_operation_variables(
