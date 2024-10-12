@@ -1,7 +1,7 @@
 use convert_case::{Case, Casing};
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
-use syn::{Ident, WhereClause};
+use syn::Ident;
 
 use crate::tokens::Tokens;
 
@@ -90,8 +90,31 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
 
     let operation_punct = translator(&trait_name);
 
-    let (name, impl_generics, type_generics, where_clause, generic, trait_name, func_name) =
-        get_operation_variables(&tokens, &trait_name, is_single);
+    let (name, impl_generics, type_generics, where_clause, generic) = tokens.split();
+
+    let generic = match is_single {
+        true => quote!(#generic),
+        false => quote!(Self),
+    };
+
+    let mut lower_op = trait_name.from_case(Case::Pascal).to_case(Case::Snake);
+
+    // edge case where BitAnd, BitOr and BitXor get converted to "bit_op" while the method they require is "bitop"
+    if lower_op.split('_').next().unwrap() == "bit" {
+        lower_op.remove(3); // removes the underscore
+    }
+
+    let func_name = Ident::new(&lower_op, Span::mixed_site());
+
+    // silly workaround for getting rid of the reference within the Option<>
+    let where_clause = match where_clause {
+        Some(v) => Some(v.clone()),
+        None => None,
+    };
+
+    let name = name.clone();
+    let impl_generics = impl_generics.to_token_stream();
+    let type_generics = type_generics.to_token_stream();
 
     let op_combined = if let Operation::Assign(_) = operation_punct {
         // if operation is an "Assign", only one operation will be generated as dimensions are irrelevant.
@@ -217,51 +240,4 @@ fn translator(name: &str) -> Operation {
         "Not" => Operation::Before(translator!(Not)),
         _ => panic!("Incorrect punctuation provided in matcher!"),
     }
-}
-
-fn get_operation_variables(
-    tokens: &Tokens,
-    trait_name: &str,
-    is_single: bool,
-) -> (
-    Ident,
-    TokenStream,
-    TokenStream,
-    Option<WhereClause>,
-    TokenStream,
-    Ident,
-    Ident,
-) {
-    let (name, impl_generics, type_generics, where_clause, generic) = tokens.split();
-
-    let generic = match is_single {
-        true => quote!(#generic),
-        false => quote!(Self),
-    };
-
-    let mut lower_op = trait_name.from_case(Case::Pascal).to_case(Case::Snake);
-
-    // edge case where BitAnd, BitOr and BitXor get converted to "bit_op" while the method they require is "bitop"
-    if lower_op.split('_').next().unwrap() == "bit" {
-        lower_op.remove(3); // removes the underscore
-    }
-
-    let trait_name_ident = Ident::new(trait_name, Span::mixed_site());
-    let func_name = Ident::new(&lower_op, Span::mixed_site());
-
-    // silly workaround for getting rid of the reference within the Option<>
-    let where_clause = match where_clause {
-        Some(v) => Some(v.clone()),
-        None => None,
-    };
-
-    (
-        name.clone(),
-        impl_generics.to_token_stream(),
-        type_generics.to_token_stream(),
-        where_clause,
-        generic.clone(),
-        trait_name_ident,
-        func_name,
-    )
 }
