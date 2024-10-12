@@ -104,6 +104,7 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
         lower_op.remove(3); // removes the underscore
     }
 
+    let trait_name_ident = Ident::new(trait_name, Span::mixed_site());
     let func_name = Ident::new(&lower_op, Span::mixed_site());
 
     // silly workaround for getting rid of the reference within the Option<>
@@ -132,7 +133,7 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
     let output_type = operation_punct.output_type();
 
     quote! {
-        impl #impl_generics std::ops::#trait_name<#generic> for #name #type_generics #where_clause {
+        impl #impl_generics std::ops::#trait_name_ident<#generic> for #name #type_generics #where_clause {
             #output_type
 
             fn #func_name(self, rhs: #generic) -> Self::Output {
