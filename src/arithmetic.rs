@@ -525,16 +525,15 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
     }
 }
 
-fn operation(tokens: &Tokens, trait_name: &str) -> TokenStream {
+fn operation(tokens: &Tokens, trait_name: &str, is_single: bool) -> TokenStream {
     let operation_punct = translator(&trait_name);
-    let is_checked = matches!(operation_punct, Operation::Checked(_, _));
 
     let (name, impl_generics, type_generics, where_clause, generic, trait_name, func_name) =
         get_operation_variables(&tokens, &trait_name);
 
     let op_combined = if let Operation::Assign(_) = operation_punct {
         // if operation is an "Assign", only one operation will be generated as dimensions are irrelevant.
-        operation_punct.gen_op(None, &is_checked, &generic)
+        operation_punct.gen_op(None, &is_single, &generic)
     } else {
         quote! {
             Self::new(
