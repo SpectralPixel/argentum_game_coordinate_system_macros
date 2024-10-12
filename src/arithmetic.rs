@@ -1,7 +1,7 @@
 use convert_case::{Case, Casing};
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
-use syn::Ident;
+use syn::{GenericParam, Ident};
 
 use crate::tokens::Tokens;
 
@@ -92,13 +92,6 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
 
     let (name, impl_generics, type_generics, where_clause, generic) = tokens.split();
 
-    let punct_before_op = matches!(operation_punct, Operation::Before(_));
-    let generic = if is_single || punct_before_op {
-        Some(quote!(<#generic>))
-    } else {
-        None
-    };
-
     let mut lower_op = trait_name.from_case(Case::Pascal).to_case(Case::Snake);
 
     // edge case where BitAnd, BitOr and BitXor get converted to "bit_op" while the method they require is "bitop"
@@ -130,6 +123,12 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
                 operation_punct.gen_op(Some(quote!(z)), &is_single, &generic),
             )
         }
+    };
+
+    let punct_before_op = matches!(operation_punct, Operation::Before(_));
+    let generic = match is_single | punct_before_op {
+        false => Some(quote!(<#generic>)),
+        true => None,
     };
 
     let output_type = operation_punct.output_type();
@@ -172,7 +171,7 @@ impl Operation {
         &self,
         dimension: Option<TokenStream>,
         is_single: &bool,
-        generic: &TokenStream,
+        generic: &GenericParam,
     ) -> TokenStream {
         // `*Assign` traits should never be generated with is_single == false
         if let Self::Assign(_) = self {
