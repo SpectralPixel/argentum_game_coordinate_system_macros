@@ -86,7 +86,7 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
 }
 
 fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> TokenStream {
-    let is_single = is_single.unwrap_or(false);
+    let is_single = is_single.unwrap_or(true);
 
     let operation_punct = translator(&trait_name);
 
