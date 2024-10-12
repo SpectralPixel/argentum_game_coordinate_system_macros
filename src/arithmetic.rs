@@ -106,9 +106,11 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
         }
     };
 
+    let output_type = operation_punct.output_type();
+
     quote! {
         impl #impl_generics std::ops::#trait_name<#generic> for #name #type_generics #where_clause {
-            type Output = Self;
+            #output_type
 
             fn #func_name(self, rhs: #generic) -> Self::Output {
                 #op_combined
@@ -176,6 +178,13 @@ impl Operation {
             Self::Assign(punct) => quote! {
                 *self = self.to_owned() #punct rhs;
             },
+        }
+    }
+    
+    pub fn output_type(&self) -> Option<TokenStream> {
+        match self {
+            Operation::Assign(_) => None,
+            _ => Some(quote!(type Output = Self;))
         }
     }
 }
