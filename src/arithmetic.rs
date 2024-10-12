@@ -102,11 +102,7 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
     let trait_name_ident = Ident::new(trait_name, Span::mixed_site());
     let func_name = Ident::new(&lower_op, Span::mixed_site());
 
-    // silly workaround for getting rid of the reference within the Option<>
-    let where_clause = match where_clause {
-        Some(v) => Some(v.clone()),
-        None => None,
-    };
+    where_clause.map(|v| v.clone()); // clone Option's inner value
 
     let op_combined = if let Operation::Assign(_) = operation_punct {
         // if operation is an "Assign", only one operation will be generated as dimensions are irrelevant.
