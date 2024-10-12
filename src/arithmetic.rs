@@ -1,7 +1,7 @@
 use convert_case::{Case, Casing};
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
-use syn::{DeriveInput, GenericParam, Ident, WhereClause};
+use syn::{GenericParam, Ident, WhereClause};
 
 use crate::tokens::Tokens;
 
@@ -42,7 +42,6 @@ macro_rules! gen_op_xyz {
 macro_rules! get_operation_variables {
     ($tokens:ident, $op:ident) => {
         (|tokens: &Tokens| -> (
-            DeriveInput,
             Ident,
             TokenStream,
             TokenStream,
@@ -52,7 +51,7 @@ macro_rules! get_operation_variables {
             Ident,
             Ident,
         ) {
-            let (ast, name, impl_generics, type_generics, where_clause, generic) = tokens.split();
+            let (name, impl_generics, type_generics, where_clause, generic) = tokens.split();
 
             let op = stringify!($op);
             let mut lower_op = op.from_case(Case::Pascal).to_case(Case::Snake);
@@ -73,7 +72,6 @@ macro_rules! get_operation_variables {
             };
 
             (
-                ast.clone(),
                 name.clone(),
                 impl_generics.to_token_stream(),
                 type_generics.to_token_stream(),
@@ -214,7 +212,6 @@ macro_rules! operation_inner_xyz {
     ($tokens:ident, $op:ident, $operation_failure:block) => {
         (|| -> TokenStream {
             let (
-                _,
                 name,
                 impl_generics,
                 type_generics,
@@ -244,7 +241,7 @@ macro_rules! operation_inner_xyz {
     };
     ($tokens:ident, $op:ident, $sym:tt) => {
         (|| -> TokenStream {
-            let (_, name, impl_generics, type_generics, where_clause, _, trait_name, func_name, _) =
+            let (name, impl_generics, type_generics, where_clause, _, trait_name, func_name, _) =
                 get_operation_variables!($tokens, $op);
 
             let op_x = gen_op_xyz!(x, $sym);
@@ -270,7 +267,6 @@ macro_rules! operation_inner_single {
     ($tokens:ident, $op:ident, $operation_failure:block) => {
         (|| -> TokenStream {
             let (
-                _,
                 name,
                 impl_generics,
                 type_generics,
@@ -302,7 +298,6 @@ macro_rules! operation_inner_single {
     ($tokens:ident, $op:ident, $sym:tt) => {
         (|| -> TokenStream {
             let (
-                _,
                 name,
                 impl_generics,
                 type_generics,
@@ -378,7 +373,7 @@ macro_rules! operation_single {
 macro_rules! operation_assign_xyz {
     ($tokens:ident, $op:ident, $sym:tt) => {
         (|| -> TokenStream {
-            let (_, name, impl_generics, type_generics, where_clause, _, trait_name, func_name, _) =
+            let (name, impl_generics, type_generics, where_clause, _, trait_name, func_name, _) =
                 get_operation_variables!($tokens, $op);
 
             operation_quote!(
@@ -398,7 +393,6 @@ macro_rules! operation_assign_single {
     ($tokens:ident, $op:ident, $sym:tt) => {
         (|| -> TokenStream {
             let (
-                _,
                 name,
                 impl_generics,
                 type_generics,
@@ -424,7 +418,7 @@ macro_rules! operation_assign_single {
 }
 
 fn not(tokens: &Tokens) -> TokenStream {
-    let (_, name, impl_generics, type_generics, where_clause, _) = tokens.split();
+    let (name, impl_generics, type_generics, where_clause, _) = tokens.split();
     quote! {
         impl #impl_generics std::ops::Not for #name #type_generics #where_clause {
             type Output = Self;
@@ -436,36 +430,21 @@ fn not(tokens: &Tokens) -> TokenStream {
     }
 }
 
-fn neg(tokens: &Tokens) -> Option<TokenStream> {
-    let (ast, name, impl_generics, type_generics, where_clause, _) = tokens.split();
-    match ast.attrs.get(0) {
-        Some(attr) => match attr.path().is_ident("signed") {
-            true => Some(quote! {
-                impl #impl_generics std::ops::Neg for #name #type_generics #where_clause {
-                    type Output = Self;
-
-                    fn neg(self) -> Self::Output {
-                        Self::new(-self.x, -self.y, -self.z)
-                    }
-                }
-            }),
-            false => None,
-        },
-        None => None,
-    }
-}
-
-// WARNING: BROKEN WINDOW
-// Using `macro_rules!` macros to implement these operations turns the code
-// from a non-DRY nightmare into slightly less WET code. I believe that
-// while this is certainly better than mere trait implementation, a lot could
-// these macros supported branching for certain conditions and edge-cases.
-// Therefore, I propose another proc-macro crate:
-// "`argentum_game_coordinate_system_arithmetic`". By turning these macros into
-// function-like procedural macros, the amount of spaghetti code could be
-// significantly reduced. For now, I will stick to this system of
-// spaghetti-code though; I want to avoid getting burnt-out from working on the
-// same system for too long.
+/*
+--------------------------- WARNING: BROKEN WINDOW ---------------------------
+Using `macro_rules!` macros to implement these operations turns the code
+from a non-DRY nightmare into slightly less WET (yet messy) code. I believe
+that while this is certainly better than implementing all traits by hand, a
+lot could still be improved if these macros supported branching for certain
+conditions and edge-cases.
+Therefore, I propose another proc-macro crate:
+"`argentum_game_coordinate_system_arithmetic`". By turning these macros into
+function-like procedural macros, the amount of spaghetti code could be
+significantly reduced. For now, I will stick to this system of
+spaghetti-code though; I want to avoid getting burnt-out from working on the
+same system for too long. Also, I have no idea how to use a TokenStream without
+the help of syn::DeriveInput, which is not availible for function-like macros.
+ */
 pub fn generate(tokens: &Tokens) -> TokenStream {
     let add = operation_xyz!(tokens, Add, "added");
     let sub = operation_xyz!(tokens, Sub, "subtracted");
@@ -504,7 +483,6 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
     let rem_assign_single = operation_assign_single!(tokens, RemAssign, %);
 
     let not = not(&tokens);
-    let neg = neg(&tokens);
 
     quote! {
         #add
@@ -544,6 +522,168 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
         #rem_assign_single
 
         #not
-        #neg
     }
+}
+
+fn operation(tokens: &Tokens, trait_name: &str) -> TokenStream {
+    let (operation_punct, is_checked) = translator(&trait_name);
+
+    let (
+        name,
+        impl_generics,
+        type_generics,
+        where_clause,
+        generic,
+        trait_name,
+        func_name,
+    ) = get_operation_variables(&tokens, &trait_name);
+
+    let op_combined = if let Operation::Assign(_) = operation_punct {
+        // if operation is an "Assign", only one operation will be generated as dimensions are irrelevant.
+        operation_punct.gen_op(None, &is_checked, &generic)
+    } else {
+        quote! {
+            Self::new(
+                operation_punct.gen_op(Some(quote!(x)), &is_checked, &generic),
+                operation_punct.gen_op(Some(quote!(y)), &is_checked, &generic),
+                operation_punct.gen_op(Some(quote!(z)), &is_checked, &generic),
+            )
+        }
+    };
+
+    quote! {
+        impl #impl_generics std::ops::#trait_name<#generic> for #name #type_generics #where_clause {
+            type Output = Self;
+
+            fn #func_name(self, rhs: #generic) -> Self::Output {
+                #op_combined
+            }
+        }
+    }
+}
+
+enum Operation {
+    Checked(Ident, &'static str),
+    Inbetween(TokenStream),
+    Before(TokenStream),
+    Assign(TokenStream),
+}
+
+impl Operation {
+    pub fn checked(trait_name: &str) -> Self {
+        let checked_op_name = String::from("checked_") + &trait_name.to_ascii_lowercase();
+        let checked_op = Ident::new(&checked_op_name, Span::mixed_site());
+        
+        let error_message_fragment = match trait_name {
+            "Add" => "added",
+            "Sub" => "subtracted",
+            "Mul" => "multiplied",
+            "Div" => "divided",
+            _ => unreachable!(),
+        };
+
+        Self::Checked(checked_op, error_message_fragment)
+    }
+
+    pub fn gen_op(&self, dimension: Option<TokenStream>, is_single: &bool, generic: &GenericParam) -> TokenStream {
+        let rhs = if *is_single { None } else { Some(quote!(rhs.#dimension)) };
+
+        match self {
+            Self::Checked(func, error_message_fragment) => {
+                let operation_failure = quote! {
+                    || { panic!("{} cannot be {} by {}! This may be caused by integer overflow.", self, #error_message_fragment, rhs) }
+                };
+
+                quote! {
+                    #generic::#func(&self.dimension, &#rhs).unwrap_or_else(#operation_failure)
+                }
+            },
+            Self::Inbetween(punct) => quote! {
+                self.#dimension #punct #rhs
+            },
+            Self::Before(punct) => quote! {
+                #punct self.dimension
+            },
+            Self::Assign(punct) => quote! {
+                *self = self.to_owned() #punct rhs;
+            },
+        }
+    }
+}
+
+macro_rules! translator {
+    ($name:ident) => {
+        syn::token::$name::default().into_token_stream()
+    };
+}
+
+fn translator(name: &str) -> (Operation, bool) {
+    let punct_name = match name {
+        x @ ("Add" | "Sub" | "Mul" | "Div") => Operation::checked(x),
+        "Rem" => Operation::Inbetween(translator!(Percent)),
+        "Shl" => Operation::Inbetween(translator!(Shl)),
+        "Shr" => Operation::Inbetween(translator!(Shr)),
+        "BitAnd" => Operation::Inbetween(translator!(And)),
+        "BitOr" => Operation::Inbetween(translator!(Or)),
+        "BitXor" => Operation::Inbetween(translator!(CaretEq)),
+        "AddAssign" => Operation::Assign(translator!(Plus)),
+        "SubAssign" => Operation::Assign(translator!(Minus)),
+        "MulAssign" => Operation::Assign(translator!(Star)),
+        "DivAssign" => Operation::Assign(translator!(Slash)),
+        "RemAssign" => Operation::Assign(translator!(Percent)),
+        "ShlAssign" => Operation::Assign(translator!(Shl)),
+        "ShrAssign" => Operation::Assign(translator!(Shr)),
+        "BitAndAssign" => Operation::Assign(translator!(And)),
+        "BitOrAssign" => Operation::Assign(translator!(Or)),
+        "BitXorAssign" => Operation::Assign(translator!(Caret)),
+        _ => panic!("Incorrect punctuation provided in matcher!"),
+    };
+
+    let is_checked = match name {
+        "Add" | "Sub" | "Mul" | "Div" => true,
+        _ => false,
+    };
+
+    (punct_name, is_checked)
+}
+
+fn get_operation_variables(
+    tokens: &Tokens,
+    trait_name: &str,
+) -> (
+    Ident,
+    TokenStream,
+    TokenStream,
+    Option<WhereClause>,
+    GenericParam,
+    Ident,
+    Ident,
+) {
+    let (name, impl_generics, type_generics, where_clause, generic) = tokens.split();
+
+    let mut lower_op = trait_name.from_case(Case::Pascal).to_case(Case::Snake);
+
+    // edge case where BitAnd, BitOr and BitXor get converted to "bit_op" while the method they require is "bitop"
+    if lower_op.split('_').next().unwrap() == "bit" {
+        lower_op.remove(3); // removes the underscore
+    }
+
+    let trait_name_ident = Ident::new(trait_name, Span::mixed_site());
+    let func_name = Ident::new(&lower_op, Span::mixed_site());
+
+    // silly workaround for getting rid of the reference within the Option<>
+    let where_clause = match where_clause {
+        Some(v) => Some(v.clone()),
+        None => None,
+    };
+
+    (
+        name.clone(),
+        impl_generics.to_token_stream(),
+        type_generics.to_token_stream(),
+        where_clause,
+        generic.clone(),
+        trait_name_ident,
+        func_name,
+    )
 }
