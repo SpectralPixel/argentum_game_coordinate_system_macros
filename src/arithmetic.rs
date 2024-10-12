@@ -132,11 +132,13 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
 
     let arguments = operation_punct.generate_function_arguments(&generic);
 
+    let return_type = operation_punct.return_type();
+
     quote! {
         impl #impl_generics std::ops::#trait_name_ident #trait_generic for #name #type_generics #where_clause {
             #output_type
 
-            fn #func_name(#arguments) -> Self::Output {
+            fn #func_name(#arguments) #return_type {
                 #op_combined
             }
         }
@@ -209,6 +211,13 @@ impl Operation {
         match self {
             Operation::Assign(_) => None,
             _ => Some(quote!(type Output = Self;))
+        }
+    }
+    
+    pub fn return_type(&self) -> TokenStream {
+        match self {
+            Operation::Assign(_) => TokenStream::new(),
+            _ => quote!(-> Self::Output),
         }
     }
 
