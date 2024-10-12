@@ -94,9 +94,9 @@ fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> Toke
 
     let punct_before_op = matches!(operation_punct, Operation::Before(_));
     let generic = if is_single || punct_before_op {
-        quote!(<#generic>)
+        Some(quote!(<#generic>))
     } else {
-        quote!(Self)
+        None
     };
 
     let mut lower_op = trait_name.from_case(Case::Pascal).to_case(Case::Snake);
