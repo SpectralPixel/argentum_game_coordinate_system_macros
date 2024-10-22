@@ -218,11 +218,11 @@ impl Operation {
             _ => quote!(self),
         };
         let second_argument = match self {
-            Self::Checked(_, _) | Self::Inbetween(_) => match is_single {
+            Self::Before(_) => None,
+            _ => match is_single {
                 true => Some(quote!(rhs: #generic)),
                 false => Some(quote!(rhs: Self)),
             },
-            _ => None,
         };
         match second_argument {
             None => quote!(#first_argument),
