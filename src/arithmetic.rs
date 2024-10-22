@@ -6,43 +6,43 @@ use syn::{GenericParam, Ident};
 use crate::tokens::Tokens;
 
 pub fn generate(tokens: &Tokens) -> TokenStream {
-    let add = operation(&tokens, "Add",  Some(false));
-    let sub = operation(&tokens, "Sub",  Some(false));
-    let mul = operation(&tokens, "Mul",  Some(false));
-    let div = operation(&tokens, "Div",  Some(false));
-    let bitand = operation(&tokens, "BitAnd",  Some(false));
-    let bitor = operation(&tokens, "BitOr",  Some(false));
-    let bitxor = operation(&tokens, "BitXor",  Some(false));
-    let rem = operation(&tokens, "Rem",  Some(false));
+    let add = operation(&tokens, "Add",  false);
+    let sub = operation(&tokens, "Sub",  false);
+    let mul = operation(&tokens, "Mul",  false);
+    let div = operation(&tokens, "Div",  false);
+    let bitand = operation(&tokens, "BitAnd",  false);
+    let bitor = operation(&tokens, "BitOr",  false);
+    let bitxor = operation(&tokens, "BitXor",  false);
+    let rem = operation(&tokens, "Rem",  false);
 
-    let add_single = operation(&tokens, "Add",  Some(true));
-    let sub_single = operation(&tokens, "Sub",  Some(true));
-    let mul_single = operation(&tokens, "Mul",  Some(true));
-    let div_single = operation(&tokens, "Div",  Some(true));
-    let bitand_single = operation(&tokens, "BitAnd",  Some(true));
-    let bitor_single = operation(&tokens, "BitOr",  Some(true));
-    let bitxor_single = operation(&tokens, "BitXor",  Some(true));
-    let rem_single = operation(&tokens, "Rem",  Some(true));
+    let add_single = operation(&tokens, "Add",  true);
+    let sub_single = operation(&tokens, "Sub",  true);
+    let mul_single = operation(&tokens, "Mul",  true);
+    let div_single = operation(&tokens, "Div",  true);
+    let bitand_single = operation(&tokens, "BitAnd",  true);
+    let bitor_single = operation(&tokens, "BitOr",  true);
+    let bitxor_single = operation(&tokens, "BitXor",  true);
+    let rem_single = operation(&tokens, "Rem",  true);
 
-    let add_assign = operation(&tokens, "AddAssign", None);
-    let sub_assign = operation(&tokens, "SubAssign", None);
-    let mul_assign = operation(&tokens, "MulAssign", None);
-    let div_assign = operation(&tokens, "DivAssign", None);
-    let bitand_assign = operation(&tokens, "BitAndAssign", None);
-    let bitor_assign = operation(&tokens, "BitOrAssign", None);
-    let bitxor_assign = operation(&tokens, "BitXorAssign", None);
-    let rem_assign = operation(&tokens, "RemAssign", None);
+    let add_assign = operation(&tokens, "AddAssign", false);
+    let sub_assign = operation(&tokens, "SubAssign", false);
+    let mul_assign = operation(&tokens, "MulAssign", false);
+    let div_assign = operation(&tokens, "DivAssign", false);
+    let bitand_assign = operation(&tokens, "BitAndAssign", false);
+    let bitor_assign = operation(&tokens, "BitOrAssign", false);
+    let bitxor_assign = operation(&tokens, "BitXorAssign", false);
+    let rem_assign = operation(&tokens, "RemAssign", false);
 
-    let add_assign_single = operation(&tokens, "AddAssign", None);
-    let sub_assign_single = operation(&tokens, "SubAssign", None);
-    let mul_assign_single = operation(&tokens, "MulAssign", None);
-    let div_assign_single = operation(&tokens, "DivAssign", None);
-    let bitand_assign_single = operation(&tokens, "BitAndAssign", None);
-    let bitor_assign_single = operation(&tokens, "BitOrAssign", None);
-    let bitxor_assign_single = operation(&tokens, "BitXorAssign", None);
-    let rem_assign_single = operation(&tokens, "RemAssign", None);
+    let add_assign_single = operation(&tokens, "AddAssign", true);
+    let sub_assign_single = operation(&tokens, "SubAssign", true);
+    let mul_assign_single = operation(&tokens, "MulAssign", true);
+    let div_assign_single = operation(&tokens, "DivAssign", true);
+    let bitand_assign_single = operation(&tokens, "BitAndAssign", true);
+    let bitor_assign_single = operation(&tokens, "BitOrAssign", true);
+    let bitxor_assign_single = operation(&tokens, "BitXorAssign", true);
+    let rem_assign_single = operation(&tokens, "RemAssign", true);
 
-    let not = operation(&tokens, "Not", Some(false));
+    let not = operation(&tokens, "Not", false);
 
     quote! {
         #add
@@ -85,9 +85,7 @@ pub fn generate(tokens: &Tokens) -> TokenStream {
     }
 }
 
-fn operation(tokens: &Tokens, trait_name: &str, is_single: Option<bool>) -> TokenStream {
-    let is_single = is_single.unwrap_or(true);
-
+fn operation(tokens: &Tokens, trait_name: &str, is_single: bool) -> TokenStream {
     let operation_punct = translator(&trait_name);
 
     let (name, impl_generics, type_generics, where_clause, generic) = tokens.split();
