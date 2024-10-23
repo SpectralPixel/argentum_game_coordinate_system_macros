@@ -6,23 +6,23 @@ use syn::{GenericParam, Ident};
 use crate::tokens::Tokens;
 
 pub fn generate(tokens: &Tokens) -> TokenStream {
-    let add = operation(&tokens, "Add",  false);
-    let sub = operation(&tokens, "Sub",  false);
-    let mul = operation(&tokens, "Mul",  false);
-    let div = operation(&tokens, "Div",  false);
-    let bitand = operation(&tokens, "BitAnd",  false);
-    let bitor = operation(&tokens, "BitOr",  false);
-    let bitxor = operation(&tokens, "BitXor",  false);
-    let rem = operation(&tokens, "Rem",  false);
+    let add = operation(&tokens, "Add", false);
+    let sub = operation(&tokens, "Sub", false);
+    let mul = operation(&tokens, "Mul", false);
+    let div = operation(&tokens, "Div", false);
+    let bitand = operation(&tokens, "BitAnd", false);
+    let bitor = operation(&tokens, "BitOr", false);
+    let bitxor = operation(&tokens, "BitXor", false);
+    let rem = operation(&tokens, "Rem", false);
 
-    let add_single = operation(&tokens, "Add",  true);
-    let sub_single = operation(&tokens, "Sub",  true);
-    let mul_single = operation(&tokens, "Mul",  true);
-    let div_single = operation(&tokens, "Div",  true);
-    let bitand_single = operation(&tokens, "BitAnd",  true);
-    let bitor_single = operation(&tokens, "BitOr",  true);
-    let bitxor_single = operation(&tokens, "BitXor",  true);
-    let rem_single = operation(&tokens, "Rem",  true);
+    let add_single = operation(&tokens, "Add", true);
+    let sub_single = operation(&tokens, "Sub", true);
+    let mul_single = operation(&tokens, "Mul", true);
+    let div_single = operation(&tokens, "Div", true);
+    let bitand_single = operation(&tokens, "BitAnd", true);
+    let bitor_single = operation(&tokens, "BitOr", true);
+    let bitxor_single = operation(&tokens, "BitXor", true);
+    let rem_single = operation(&tokens, "Rem", true);
 
     let add_assign = operation(&tokens, "AddAssign", false);
     let sub_assign = operation(&tokens, "SubAssign", false);
@@ -196,14 +196,16 @@ impl Operation {
             },
         }
     }
-    
+
     pub fn output_type(&self) -> Option<TokenStream> {
         match self {
             Self::Assign(_) => None,
-            _ => Some(quote!(type Output = Self;))
+            _ => Some(quote!(
+                type Output = Self;
+            )),
         }
     }
-    
+
     pub fn return_type(&self) -> Option<TokenStream> {
         match self {
             Self::Assign(_) => None,
